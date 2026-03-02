@@ -51,34 +51,34 @@
 
 ```mermaid
 graph TB
-    subgraph 表现层
+    subgraph Layer1["表现层"]
         A1[REST API]
         A2[CLI]
         A3[WebSocket]
     end
     
-    subgraph 服务层
+    subgraph Layer2["服务层"]
         B1[MemoryService]
         B2[RAGService]
         B3[GraphService]
         B4[WorkflowService]
     end
     
-    subgraph 核心层
+    subgraph Layer3["核心层"]
         C1[LangGraph 工作流]
         C2[记忆引擎]
         C3[遗忘引擎]
         C4[反思引擎]
     end
     
-    subgraph 后台层
+    subgraph Layer4["后台层"]
         D1[Celery 任务]
         D2[定时调度]
         D3[异步处理]
     end
     
-    subgraph 数据层
-        E1[Neo4j 图数据库]
+    subgraph Layer5["数据层"]
+        E1[Neo4j]
         E2[Elasticsearch]
         E3[PostgreSQL]
     end
