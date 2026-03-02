@@ -82,6 +82,7 @@
 | **nanobot** | 23,839 | Agent 框架 | [GitHub](https://github.com/HKUDS/nanobot) | 2026-03-02 | [GitHub/nanobot/](./GitHub/nanobot/) | 98.75% ⭐⭐⭐⭐⭐ |
 | **MemoryBear** | - | 记忆平台 | [GitHub](https://github.com/qudi17/MemoryBear) | 2026-03-02 | [GitHub/MemoryBear/](./GitHub/MemoryBear/) | ✅ 已完成 |
 | **LlamaIndex** | 35,000+ | RAG 框架 | [GitHub](https://github.com/run-llama/llama_index) | 2026-03-02 | [GitHub/llamaindex/](./GitHub/llamaindex/) | 98.8% ⭐⭐⭐⭐⭐ |
+| **everything-claude-code** | - | Agent 技能框架 | [GitHub](https://github.com/affaan-m/everything-claude-code) | 2026-03-02 | [GitHub/everything-claude-code/](./GitHub/everything-claude-code/) | 98% ⭐⭐⭐⭐⭐ |
 
 ### 理论研究
 
