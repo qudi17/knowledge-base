@@ -187,37 +187,34 @@ graph TD
 
 ```mermaid
 stateDiagram-v2
-    [*] --> 定时触发
+    [*] --> ScheduledTrigger
+    ScheduledTrigger --> FetchMemories
+    FetchMemories --> CalculateActivation
+    CalculateActivation --> ThresholdCheck
     
-    定时触发 --> 获取所有记忆：Celery Beat<br/>每天 02:00
+    ThresholdCheck --> Forget: activation < threshold
+    ThresholdCheck --> Consolidate: activation > threshold
+    ThresholdCheck --> Keep: activation >= consolidation_threshold
     
-    获取所有记忆 --> 计算激活水平：ACT-R 公式<br/>memorybear/memory/forgetting/activation.py:34-89
+    Forget --> MoveToColdStorage
+    Consolidate --> StrengthenRelations
+    Keep --> NoChange
     
-    计算激活水平 --> 阈值判断
+    MoveToColdStorage --> UpdateState
+    StrengthenRelations --> UpdateState
+    NoChange --> UpdateState
+    UpdateState --> Log
+    Log --> [*]
     
-    阈值判断 --> 遗忘: 激活 < 阈值
-    阈值判断 --> 巩固：激活 > 阈值且< 巩固阈值
-    阈值判断 --> 保持：激活 >= 巩固阈值
-    
-    遗忘 --> 移动到低成本存储：memorybear/memory/forgetting/nodes/forget.py:12-45
-    巩固 --> 增强关系：memorybear/memory/forgetting/nodes/consolidate.py:23-78
-    保持 --> 不变
-    
-    移动到低成本存储 --> 更新状态
-    增强关系 --> 更新状态
-    不变 --> 更新状态
-    
-    更新状态 --> 记录日志
-    记录日志 --> [*]
-    
-        📍 ACT-R 激活公式
-        memorybear/memory/forgetting/activation.py:34-89
-        
-        Aᵢ = ln(Σ tⱼ^-d) + noise
-        - tⱼ: 第 j 次使用时间
-        - d: 衰减率 (默认 0.5)
-        - noise: 高斯噪声
+    style CalculateActivation fill:#f9f,stroke:#333,stroke-width:2px
 ```
+
+> **📍 ACT-R 激活公式**: [`activation.py:34-89`](https://github.com/qudi17/MemoryBear/blob/main/memorybear/memory/forgetting/activation.py#L34-L89)
+> 
+> 公式：`Aᵢ = ln(Σ tⱼ^-d) + noise`
+> - `tⱼ`: 第 j 次使用时间
+> - `d`: 衰减率 (默认 0.5)
+> - `noise`: 高斯噪声
 
 **关键代码位置**:
 - [激活计算](https://github.com/qudi17/MemoryBear/blob/main/memorybear/memory/forgetting/activation.py#L34-L89)
