@@ -119,13 +119,10 @@ sequenceDiagram
     API->>MS: write_memory(content, metadata)
     MS->>LG: invoke(WriteMemoryState)
     
-    Note over LG: 📍 关键代码<br/>memorybear/memory/workflow/graph.py:45-89
     LG->>Node: execute(state)
     
-    Note over Node: 📍 关键代码<br/>memorybear/memory/workflow/nodes/write.py:12-67
     Node->>ME: create_memory(content, metadata)
     
-    Note over ME: 📍 关键代码<br/>memorybear/memory/engine.py:78-156
     ME->>Neo4j: CREATE (m:Memory {id, content, ...})
     ME->>ES: index(memory_doc)
     
@@ -164,13 +161,10 @@ graph TD
     H --> J
     I --> J
     
-    Note over J: 📍 关键代码<br/>memorybear/rag/reranker.py:23-89
     J --> K{Top-K 融合}
     
-    Note over K: 📍 关键代码<br/>memorybear/rag/fusion.py:15-67
     K --> L[MemoryLoader 节点]
     
-    Note over L: 📍 关键代码<br/>memorybear/memory/workflow/nodes/load.py:34-112
     L --> M[加载记忆详情]
     
     M --> N[Neo4j MATCH + 关系]
@@ -216,7 +210,6 @@ stateDiagram-v2
     更新状态 --> 记录日志
     记录日志 --> [*]
     
-    Note right of 计算激活水平
         📍 ACT-R 激活公式
         memorybear/memory/forgetting/activation.py:34-89
         
@@ -224,7 +217,6 @@ stateDiagram-v2
         - tⱼ: 第 j 次使用时间
         - d: 衰减率 (默认 0.5)
         - noise: 高斯噪声
-    end Note
 ```
 
 **关键代码位置**:
@@ -270,10 +262,6 @@ graph LR
     R --> T
     S --> T
     
-    Note over D: 📍 WriteMemoryNode<br/>nodes/write.py:12-67
-    Note over E: 📍 LoadMemoryNode<br/>nodes/load.py:34-112
-    Note over N: 📍 HybridSearch<br/>rag/hybrid.py:45-123
-    Note over O: 📍 Reranker<br/>rag/reranker.py:23-89
 ```
 
 **完整工作流代码**:
