@@ -79,7 +79,7 @@
 | 项目 | Stars | 类型 | GitHub 地址 | 完成日期 | 报告位置 | 完整性评分 |
 |------|-------|------|-----------|---------|---------|------------|
 | **MarkItDown** | Microsoft | 文档转换 | [GitHub](https://github.com/microsoft/markitdown) | 2026-03-02 | [.planning/markitdown-research/](../.planning/markitdown-research/) | 92% ⭐⭐⭐⭐⭐ |
-| **nanobot** | 23,839 | Agent 框架 | [GitHub](https://github.com/HKUDS/nanobot) | 2026-03-01 | [GitHub/nanobot/](./GitHub/nanobot/) | - |
+| **nanobot** | 23,839 | Agent 框架 | [GitHub](https://github.com/HKUDS/nanobot) | 2026-03-02 | [GitHub/nanobot/](./GitHub/nanobot/) | 98.75% ⭐⭐⭐⭐⭐ |
 | **MemoryBear** | - | 记忆平台 | [GitHub](https://github.com/qudi17/MemoryBear) | 2026-03-02 | [GitHub/MemoryBear/](./GitHub/MemoryBear/) | - |
 
 ### 理论研究
@@ -109,9 +109,9 @@
 |------|------|
 | **待研究** | 28 个（含 9 个 RAG 框架） |
 | **研究中** | 0 个 |
-| **已完成** | 12 个 (4 GitHub 项目 + 8 理论) |
+| **已完成** | 13 个 (5 GitHub 项目 + 8 理论) |
 | **已暂停** | 0 个 |
-| **总计** | 18 个 |
+| **总计** | 19 个 |
 
 **优先级分布**:
 - ⭐⭐⭐ 高优先级：6 个
@@ -148,6 +148,7 @@
 
 | 日期 | 更新内容 | 操作 |
 |------|---------|------|
+| 2026-03-02 | 完成 nanobot 深度研究 | 11 篇研究报告，完整性评分 98.75%，入口点普查/模块化分析/调用链追踪/知识链路/架构分析/代码覆盖率/设计模式识别 |
 | 2026-03-02 | 完成 MemoryBear v2.1 深度研究 | 15 篇研究报告，完整性评分 94%，新增 ACT-R 遗忘引擎/反思引擎/Neo4j 存储/混合搜索深度分析 |
 | 2026-03-01 | 启动 LlamaIndex 深度研究 | RAG 框架研究 #3（35K⭐，RAG 领导者） |
 | 2026-03-01 | 完成 Dify 深度研究 | 4 篇研究报告（概览/RAG 引擎/工作流/对比） |
