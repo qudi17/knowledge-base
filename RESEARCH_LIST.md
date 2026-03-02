@@ -30,7 +30,7 @@
 |---|------|-------|------|-----------|-------|------|---------|
 | 1 | **Dify** | 50,000+ | RAG 应用平台 | [GitHub](https://github.com/langgenius/dify) | ⭐⭐⭐⭐⭐ | 📝 | 待开始 |
 | 2 | **PrivateGPT** | 40,000+ | RAG 应用 | [GitHub](https://github.com/imartinez/privateGPT) | ⭐⭐⭐⭐⭐ | 📝 | 待开始 |
-| 3 | **LlamaIndex** | 35,000+ | RAG 框架 | [GitHub](https://github.com/run-llama/llama_index) | ⭐⭐⭐⭐⭐ | 📝 | 待开始 |
+| 3 | **LlamaIndex** | 35,000+ | RAG 框架 | [GitHub](https://github.com/run-llama/llama_index) | ⭐⭐⭐⭐⭐ | ✅ | 已完成 |
 | 4 | **AnythingLLM** | 35,000+ | RAG 桌面应用 | [GitHub](https://github.com/Mintplex-Labs/anything-llm) | ⭐⭐⭐⭐ | 📝 | 待开始 |
 | 5 | **Haystack** | 15,000+ | RAG 框架 | [GitHub](https://github.com/deepset-ai/haystack) | ⭐⭐⭐⭐⭐ | 📝 | 待开始 |
 | 6 | **ChatDOC** | 15,000+ | 文档 RAG | [GitHub](https://github.com/ChatDOC/ChatDOC) | ⭐⭐⭐ | 📝 | 待开始 |
@@ -81,6 +81,7 @@
 | **MarkItDown** | Microsoft | 文档转换 | [GitHub](https://github.com/microsoft/markitdown) | 2026-03-02 | [.planning/markitdown-research/](../.planning/markitdown-research/) | 92% ⭐⭐⭐⭐⭐ |
 | **nanobot** | 23,839 | Agent 框架 | [GitHub](https://github.com/HKUDS/nanobot) | 2026-03-02 | [GitHub/nanobot/](./GitHub/nanobot/) | 98.75% ⭐⭐⭐⭐⭐ |
 | **MemoryBear** | - | 记忆平台 | [GitHub](https://github.com/qudi17/MemoryBear) | 2026-03-02 | [GitHub/MemoryBear/](./GitHub/MemoryBear/) | - |
+| **LlamaIndex** | 35,000+ | RAG 框架 | [GitHub](https://github.com/run-llama/llama_index) | 2026-03-02 | [GitHub/llamaindex/](./GitHub/llamaindex/) | 98.8% ⭐⭐⭐⭐⭐ |
 
 ### 理论研究
 
@@ -107,11 +108,11 @@
 
 | 指标 | 数值 |
 |------|------|
-| **待研究** | 28 个（含 9 个 RAG 框架） |
+| **待研究** | 27 个（含 8 个 RAG 框架） |
 | **研究中** | 0 个 |
-| **已完成** | 13 个 (5 GitHub 项目 + 8 理论) |
+| **已完成** | 14 个 (6 GitHub 项目 + 8 理论) |
 | **已暂停** | 0 个 |
-| **总计** | 19 个 |
+| **总计** | 20 个 |
 
 **优先级分布**:
 - ⭐⭐⭐ 高优先级：6 个
@@ -148,6 +149,7 @@
 
 | 日期 | 更新内容 | 操作 |
 |------|---------|------|
+| 2026-03-02 | 完成 LlamaIndex 深度研究 | 11 篇研究报告，完整性评分 98.8%，14 阶段完整执行，5 层架构分析，8 种设计模式识别 |
 | 2026-03-02 | 完成 nanobot 深度研究 | 11 篇研究报告，完整性评分 98.75%，入口点普查/模块化分析/调用链追踪/知识链路/架构分析/代码覆盖率/设计模式识别 |
 | 2026-03-02 | 完成 MemoryBear v2.1 深度研究 | 15 篇研究报告，完整性评分 94%，新增 ACT-R 遗忘引擎/反思引擎/Neo4j 存储/混合搜索深度分析 |
 | 2026-03-01 | 启动 LlamaIndex 深度研究 | RAG 框架研究 #3（35K⭐，RAG 领导者） |
@@ -174,4 +176,4 @@
 ---
 
 **维护者**: Jarvis  
-**最后更新**: 2026-03-01
+**最后更新**: 2026-03-02
