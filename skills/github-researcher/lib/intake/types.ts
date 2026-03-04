@@ -1,4 +1,4 @@
-export type InputType = "github_url" | "shorthand";
+export type InputType = "github_url" | "shorthand" | "local_path";
 
 export interface RepositoryInput {
   raw: string;
@@ -21,6 +21,9 @@ export interface NormalizedRepositoryTarget {
   canonical_id: string;
   canonical_compare_key: string;
   canonical_url: string;
+  normalized_path?: string;
+  repo_root?: string;
+  path_source?: "absolute" | "relative" | "home";
 }
 
 export interface CanonicalIdentityMapping {
@@ -31,7 +34,7 @@ export interface CanonicalIdentityMapping {
 
 export interface CanonicalRepositoryMetadata {
   default_branch: string;
-  visibility: "public" | "private";
+  visibility: "public" | "private" | "local";
   exists: boolean;
 }
 
