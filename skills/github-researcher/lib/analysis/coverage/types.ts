@@ -80,6 +80,7 @@ export interface PhaseScopePlan {
 }
 
 export interface CoverageConclusion {
+  conclusion_id: string;
   key: string;
   statement: string;
   confidence: CoverageQualityTier;
@@ -87,6 +88,7 @@ export interface CoverageConclusion {
 }
 
 export interface PhaseExecutionRecord {
+  phase_record_id: string;
   phase_id: string;
   scope: string[];
   status: "completed" | "failed";
@@ -96,12 +98,41 @@ export interface PhaseExecutionRecord {
   ended_at: string;
 }
 
+export type SafeContinueReasonCode =
+  | "allow_low_impact_failure"
+  | "allow_deferred_scope_failure"
+  | "deny_high_impact_failure"
+  | "deny_no_remaining_scope"
+  | "deny_policy_default";
+
+export interface SafeContinueDecision {
+  phase_id: string;
+  allowed: boolean;
+  reason_code: SafeContinueReasonCode;
+  rationale: string;
+}
+
+export interface SafeContinueEvaluationInput {
+  phase_id: string;
+  failure_gap: CoverageGap;
+  remaining_scope_count: number;
+  completed_phase_count: number;
+}
+
+export interface ConflictSourceRef {
+  phase_id: string;
+  phase_record_id: string;
+  conclusion_id: string;
+  evidence_ids: string[];
+}
+
 export interface MergedConclusionRecord {
   key: string;
   statement: string;
   confidence: CoverageQualityTier;
   evidence_ids: string[];
   conflict_history: string[];
+  conflict_sources: ConflictSourceRef[];
   adjudication_rationale: string;
 }
 

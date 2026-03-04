@@ -1,4 +1,5 @@
 import type {
+  ConflictSourceRef,
   CoverageGap,
   MergedConclusionRecord,
   MergedCoverageOutput,
@@ -12,13 +13,17 @@ function confidenceScore(level: "high" | "medium" | "low"): number {
 }
 
 function selectConfidence(levels: Array<"high" | "medium" | "low">): "high" | "medium" | "low" {
-  const top = levels.reduce((best, next) => (confidenceScore(next) > confidenceScore(best) ? next : best), "low");
-  return top;
+  return levels.reduce((best, next) => (confidenceScore(next) > confidenceScore(best) ? next : best), "low");
 }
 
 export function adjudicateConflictingConclusions(input: {
   key: string;
-  records: Array<{ statement: string; confidence: "high" | "medium" | "low"; evidence_ids: string[] }>;
+  records: Array<{
+    statement: string;
+    confidence: "high" | "medium" | "low";
+    evidence_ids: string[];
+    source: ConflictSourceRef;
+  }>;
 }): MergedConclusionRecord {
   const sorted = [...input.records].sort((a, b) => {
     const conf = confidenceScore(b.confidence) - confidenceScore(a.confidence);
@@ -28,6 +33,7 @@ export function adjudicateConflictingConclusions(input: {
 
   const chosen = sorted[0];
   const conflictHistory = sorted.slice(1).map((item) => item.statement);
+  const sources = sorted.map((item) => item.source);
 
   return {
     key: input.key,
@@ -35,10 +41,11 @@ export function adjudicateConflictingConclusions(input: {
     confidence: selectConfidence(sorted.map((item) => item.confidence)),
     evidence_ids: [...new Set(sorted.flatMap((item) => item.evidence_ids))].sort(),
     conflict_history: conflictHistory,
+    conflict_sources: sources,
     adjudication_rationale:
       conflictHistory.length === 0
         ? "single_source_conclusion"
-        : "selected highest-confidence statement and preserved alternatives"
+        : "selected highest-confidence statement and preserved alternatives with lineage"
   };
 }
 
@@ -47,7 +54,12 @@ export function mergeCoveragePhaseOutputs(input: {
 }): MergedCoverageOutput {
   const conclusionBuckets = new Map<
     string,
-    Array<{ statement: string; confidence: "high" | "medium" | "low"; evidence_ids: string[] }>
+    Array<{
+      statement: string;
+      confidence: "high" | "medium" | "low";
+      evidence_ids: string[];
+      source: ConflictSourceRef;
+    }>
   >();
 
   const allGaps: CoverageGap[] = [];
@@ -62,7 +74,13 @@ export function mergeCoveragePhaseOutputs(input: {
       current.push({
         statement: conclusion.statement,
         confidence: conclusion.confidence,
-        evidence_ids: conclusion.evidence_ids
+        evidence_ids: conclusion.evidence_ids,
+        source: {
+          phase_id: record.phase_id,
+          phase_record_id: record.phase_record_id,
+          conclusion_id: conclusion.conclusion_id,
+          evidence_ids: conclusion.evidence_ids
+        }
       });
       conclusionBuckets.set(conclusion.key, current);
     }

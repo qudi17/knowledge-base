@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { listCheckpoints } from "../../skills/github-researcher/lib/reliability/checkpoint-store";
+import { runAnalysisWithCoverage } from "../../skills/github-researcher/lib/analysis";
 import { runWithReliability } from "../../skills/github-researcher/lib/reliability/orchestrator";
 
 describe("reliability orchestrator", () => {
@@ -246,5 +247,51 @@ describe("reliability orchestrator", () => {
     const checkpoints = listCheckpoints("run-orch-coverage-1");
     const last = checkpoints[checkpoints.length - 1].progress_snapshot as Record<string, unknown>;
     expect((last.coverage_phases as { completed_phase_ids: string[] }).completed_phase_ids).toEqual(["06.1"]);
+  });
+
+  it("surfaces runtime coverage summary and phased merge output through stage outputs", async () => {
+    const result = await runWithReliability({
+      run_id: "run-orch-coverage-runtime",
+      input: { repo: "owner/repo" },
+      input_fingerprint: "fp-orch-coverage-runtime",
+      stages: [
+        {
+          name: "coverage_phase_execution",
+          run: async () =>
+            runAnalysisWithCoverage({
+              run_id: "06-runtime-out",
+              modules: [
+                { module_id: "a/entry", file_count: 900, core_rank: 1 },
+                { module_id: "b/core", file_count: 900, core_rank: 2 }
+              ],
+              files: [
+                { path: "src/a.ts", parseable: true },
+                { path: "src/b.ts", parseable: false }
+              ],
+              large_repo_hint: { candidate_files: 2000, module_count: 120 },
+              run_phase: async (phaseId, scope) => ({
+                conclusions: [
+                  {
+                    conclusion_id: `${phaseId}-c`,
+                    key: "entry",
+                    statement: `entry ${scope[0]}`,
+                    confidence: "medium",
+                    evidence_ids: [`${phaseId}-e`]
+                  }
+                ],
+                gaps: []
+              })
+            })
+        }
+      ]
+    });
+
+    expect(result.status).toBe("completed");
+    const output = result.outputs.coverage_phase_execution as {
+      coverage_summary: { headline: string };
+      merged_output: { global_coverage_statement: string };
+    };
+    expect(output.coverage_summary.headline.toLowerCase()).toContain("coverage");
+    expect(output.merged_output.global_coverage_statement).toContain("Merged");
   });
 });
