@@ -19,18 +19,18 @@ created: 2026-03-04
 |----------|-------|
 | **Framework** | vitest |
 | **Config file** | none - Wave 0 installs |
-| **Quick run command** | `npm exec --yes vitest run tests/reliability/state-machine.spec.ts tests/reliability/retry-policy.spec.ts` |
+| **Quick run command** | `npm exec --yes vitest run tests/reliability/state-machine.spec.ts` |
 | **Full suite command** | `npm exec --yes vitest run tests/reliability/*.spec.ts tests/reliability/**/*.spec.ts` |
-| **Estimated runtime** | ~60 seconds |
+| **Estimated runtime** | ~30 seconds |
 
 ---
 
 ## Sampling Rate
 
-- **After every task commit:** Run `npm exec --yes vitest run tests/reliability/state-machine.spec.ts tests/reliability/retry-policy.spec.ts`
+- **After every task commit:** Run `npm exec --yes vitest run tests/reliability/state-machine.spec.ts`
 - **After every plan wave:** Run `npm exec --yes vitest run tests/reliability/*.spec.ts tests/reliability/**/*.spec.ts`
 - **Before `$gsd-verify-work`:** Full suite must be green
-- **Max feedback latency:** 60 seconds
+- **Max feedback latency:** 30 seconds
 
 ---
 
@@ -71,7 +71,7 @@ created: 2026-03-04
 - [ ] Sampling continuity: no 3 consecutive tasks without automated verify
 - [ ] Wave 0 covers all MISSING references
 - [ ] No watch-mode flags
-- [ ] Feedback latency < 60s
+- [ ] Feedback latency < 30s
 - [ ] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
