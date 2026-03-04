@@ -208,4 +208,29 @@ describe("runRepositoryPreflight", () => {
       expect(result.identity_mapping.input_id).toBe("openai/cookbook-old");
     }
   });
+
+  it("supports local input mode without URL regression", async () => {
+    const result = await runRepositoryPreflight("./local-repo", {
+      localResolverDeps: {
+        cwd: () => "/tmp",
+        homedir: () => "/Users/eddy",
+        realpath: async () => "/tmp/local-repo",
+        access: async () => undefined,
+        stat: async () => ({ isDirectory: () => true }),
+        runGit: async (_cwd, args) => {
+          if (args[0] === "rev-parse") return { ok: true, stdout: "/tmp/local-repo\n" };
+          if (args[0] === "symbolic-ref") return { ok: true, stdout: "main\n" };
+          if (args[0] === "config") return { ok: false };
+          return { ok: false };
+        }
+      }
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.input_type).toBe("local_path");
+      expect(result.normalized.canonical_id).toBe("local:local-repo");
+      expect(result.normalized.normalized_path).toBe("/tmp/local-repo");
+    }
+  });
 });

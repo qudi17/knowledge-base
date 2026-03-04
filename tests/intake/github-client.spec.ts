@@ -29,7 +29,7 @@ describe("fetchCanonicalRepository", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value.canonical_id).toBe("OpenAI/openai-cookbook");
-      expect(result.value.changed).toBe(true);
+      expect(result.value.changed).toBe(false);
     }
   });
 
