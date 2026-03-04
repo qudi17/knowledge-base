@@ -19,6 +19,7 @@ created: 2026-03-04
 |----------|-------|
 | **Framework** | vitest |
 | **Config file** | none - Wave 0 installs |
+| **Smoke command** | `pnpm vitest run tests/intake/parser-normalizer.spec.ts` |
 | **Quick run command** | `pnpm vitest run tests/intake/parser-normalizer.spec.ts tests/intake/validator.spec.ts` |
 | **Full suite command** | `pnpm vitest run tests/intake/*.spec.ts tests/intake/**/*.spec.ts` |
 | **Estimated runtime** | ~45 seconds |
@@ -27,10 +28,11 @@ created: 2026-03-04
 
 ## Sampling Rate
 
-- **After every task commit:** Run `pnpm vitest run tests/intake/parser-normalizer.spec.ts tests/intake/validator.spec.ts`
+- **After every task commit:** Run smoke `pnpm vitest run tests/intake/parser-normalizer.spec.ts`
+- **After every 2 task commits (or task boundary with validator/client changes):** Run quick `pnpm vitest run tests/intake/parser-normalizer.spec.ts tests/intake/validator.spec.ts`
 - **After every plan wave:** Run `pnpm vitest run tests/intake/*.spec.ts tests/intake/**/*.spec.ts`
 - **Before `$gsd-verify-work`:** Full suite must be green
-- **Max feedback latency:** 60 seconds
+- **Max feedback latency:** 30 seconds (smoke), 60 seconds (quick)
 
 ---
 
@@ -68,7 +70,7 @@ created: 2026-03-04
 ## Validation Sign-Off
 
 - [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
+- [ ] Sampling continuity: >=2 of each 3 consecutive implementation tasks include `<automated>`
 - [ ] Wave 0 covers all MISSING references
 - [ ] No watch-mode flags
 - [ ] Feedback latency < 60s
