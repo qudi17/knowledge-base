@@ -5,12 +5,20 @@ import type {
   CoreSnapshotModule,
   ScoredCoreModule
 } from "./types";
+import type { CoverageManifest } from "../coverage/types";
 
 export interface BuildSnapshotInput {
   selected_modules: ScoredCoreModule[];
   role_explanations: CoreRoleExplanation[];
   selection_config: CoreSelectionConfig;
   generated_at?: string;
+}
+
+export interface CoverageManifestSnapshot {
+  phase: "06";
+  generated_at: string;
+  manifest: CoverageManifest;
+  snapshot_version: number;
 }
 
 function isoNow(): string {
@@ -96,4 +104,27 @@ export function updateCoreSnapshotAfterRevalidation(
       updated_at: at
     }
   };
+}
+
+export function buildCoverageManifestSnapshot(
+  manifest: CoverageManifest,
+  at: string = isoNow()
+): CoverageManifestSnapshot {
+  return {
+    phase: "06",
+    generated_at: at,
+    manifest,
+    snapshot_version: 1
+  };
+}
+
+export function parseCoverageManifestSnapshot(raw: string): CoverageManifestSnapshot {
+  const parsed = JSON.parse(raw) as CoverageManifestSnapshot;
+  if (parsed.phase !== "06") {
+    throw new Error("Invalid coverage snapshot phase.");
+  }
+  if (!parsed.manifest || !Array.isArray(parsed.manifest.entries)) {
+    throw new Error("Invalid coverage manifest snapshot payload.");
+  }
+  return parsed;
 }
