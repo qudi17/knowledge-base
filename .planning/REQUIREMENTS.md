@@ -74,34 +74,34 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INPT-01 | Phase TBD | Pending |
-| INPT-02 | Phase TBD | Pending |
-| INPT-03 | Phase TBD | Pending |
-| INPT-04 | Phase TBD | Pending |
-| ANLY-01 | Phase TBD | Pending |
-| ANLY-02 | Phase TBD | Pending |
-| ANLY-03 | Phase TBD | Pending |
-| ANLY-04 | Phase TBD | Pending |
-| ANLY-05 | Phase TBD | Pending |
-| EVID-01 | Phase TBD | Pending |
-| EVID-02 | Phase TBD | Pending |
-| EVID-03 | Phase TBD | Pending |
-| EVID-04 | Phase TBD | Pending |
-| REPT-01 | Phase TBD | Pending |
-| REPT-02 | Phase TBD | Pending |
-| REPT-03 | Phase TBD | Pending |
-| REPT-04 | Phase TBD | Pending |
-| RELY-01 | Phase TBD | Pending |
-| RELY-02 | Phase TBD | Pending |
-| RELY-03 | Phase TBD | Pending |
-| RELY-04 | Phase TBD | Pending |
-| RELY-05 | Phase TBD | Pending |
+| INPT-01 | Phase 1 | Pending |
+| INPT-02 | Phase 3 | Pending |
+| INPT-03 | Phase 4 | Pending |
+| INPT-04 | Phase 1 | Pending |
+| ANLY-01 | Phase 5 | Pending |
+| ANLY-02 | Phase 5 | Pending |
+| ANLY-03 | Phase 5 | Pending |
+| ANLY-04 | Phase 6 | Pending |
+| ANLY-05 | Phase 6 | Pending |
+| EVID-01 | Phase 7 | Pending |
+| EVID-02 | Phase 7 | Pending |
+| EVID-03 | Phase 7 | Pending |
+| EVID-04 | Phase 7 | Pending |
+| REPT-01 | Phase 8 | Pending |
+| REPT-02 | Phase 8 | Pending |
+| REPT-03 | Phase 8 | Pending |
+| REPT-04 | Phase 8 | Pending |
+| RELY-01 | Phase 2 | Pending |
+| RELY-02 | Phase 2 | Pending |
+| RELY-03 | Phase 2 | Pending |
+| RELY-04 | Phase 2 | Pending |
+| RELY-05 | Phase 2 | Pending |
 
 **Coverage:**
 - v1 requirements: 22 total
-- Mapped to phases: 0
-- Unmapped: 22 ⚠️
+- Mapped to phases: 22
+- Unmapped: 0 ✅
 
 ---
 *Requirements defined: 2026-03-04*
-*Last updated: 2026-03-04 after initial definition*
+*Last updated: 2026-03-04 after roadmap mapping*
