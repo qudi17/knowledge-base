@@ -1,4 +1,5 @@
 export { runRepositoryPreflight } from "./preflight";
+export { resolveLocalRepositoryTarget, runLocalRepositoryPreflight } from "./local-resolver";
 export { parseRepositoryTarget } from "./parser";
 export { normalizeRepositoryTarget } from "./normalizer";
 export { validateRepositoryCandidate } from "./validator";

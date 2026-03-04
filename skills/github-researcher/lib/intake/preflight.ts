@@ -1,11 +1,14 @@
 import { ERROR_CLASS, ERROR_CODE } from "./error-codes";
 import { fetchCanonicalRepository, type GitHubClientOptions } from "./github-client";
+import { runLocalRepositoryPreflight, type LocalResolverDeps } from "./local-resolver";
 import { normalizeRepositoryTarget } from "./normalizer";
 import { parseRepositoryTarget } from "./parser";
 import { validateRepositoryCandidate } from "./validator";
 import type { IntakeFailure, IntakeResult, IntakeSuccess } from "./types";
 
-export interface PreflightOptions extends GitHubClientOptions {}
+export interface PreflightOptions extends GitHubClientOptions {
+  localResolverDeps?: LocalResolverDeps;
+}
 
 function failureFromParse(message: string, details: Record<string, unknown> = {}): IntakeFailure {
   return {
@@ -29,6 +32,10 @@ export async function runRepositoryPreflight(
   }
 
   const parsed = parseResult.value;
+  if (parsed.input_type === "local_path") {
+    return runLocalRepositoryPreflight(inputRaw, parsed.source_path ?? inputRaw, options.localResolverDeps);
+  }
+
   const normalization = normalizeRepositoryTarget(parsed);
 
   const validation = validateRepositoryCandidate(inputRaw, normalization.normalized);

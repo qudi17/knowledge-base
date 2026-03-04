@@ -4,7 +4,7 @@ const SHORTHAND_PATTERN = /^@([^/\s]+)\/([^/\s]+)$/;
 
 function buildParsedTarget(params: {
   inputRaw: string;
-  inputType: "github_url" | "shorthand";
+  inputType: "github_url" | "shorthand" | "local_path";
   host: string;
   owner: string;
   repo: string;
@@ -67,6 +67,20 @@ function parseGithubUrl(inputRaw: string, value: string): ParseRepositoryTargetR
   };
 }
 
+function parseLocalPath(inputRaw: string, value: string): ParseRepositoryTargetResult {
+  return {
+    ok: true,
+    value: buildParsedTarget({
+      inputRaw,
+      inputType: "local_path",
+      host: "local",
+      owner: "",
+      repo: "",
+      sourcePath: value
+    })
+  };
+}
+
 export function parseRepositoryTarget(inputRaw: string): ParseRepositoryTargetResult {
   const value = inputRaw.trim();
 
@@ -95,5 +109,20 @@ export function parseRepositoryTarget(inputRaw: string): ParseRepositoryTargetRe
     };
   }
 
-  return parseGithubUrl(inputRaw, value);
+  if (value.includes("://")) {
+    return parseGithubUrl(inputRaw, value);
+  }
+
+  if (value.includes("github.com/")) {
+    return {
+      ok: false,
+      message: "Repository input is not a valid URL or @owner/repo shorthand.",
+      details: {
+        input: inputRaw,
+        suggestions: ["https://github.com/owner/repo", "@owner/repo"]
+      }
+    };
+  }
+
+  return parseLocalPath(inputRaw, value);
 }
