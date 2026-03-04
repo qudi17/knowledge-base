@@ -80,3 +80,10 @@ export interface SearchContextMetadata {
   selected_stars: number;
   selected_updated_at: string;
 }
+
+export interface LocalInputMetadata {
+  canonical_id: string;
+  normalized_path: string;
+  repo_root: string;
+  default_branch: string;
+}
