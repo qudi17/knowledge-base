@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildFinalSummary,
-  emitProgress
+  emitProgress,
+  reportStageProgress
 } from "../../skills/github-researcher/lib/reliability/progress-reporter";
 
 describe("progress-reporter emitProgress", () => {
@@ -101,5 +102,30 @@ describe("progress-reporter buildFinalSummary", () => {
     expect(summary.pinned_failures[1].failure_class).toBe("rate_limit");
     expect(summary.pinned_failures[2].failure_class).toBe("transient");
     expect(summary.retry_statistics.total_attempts).toBe(5);
+  });
+});
+
+describe("progress-reporter reportStageProgress", () => {
+  it("emits deterministic stage events for workflow and snapshot milestones", () => {
+    const workflow = reportStageProgress({
+      run_id: "run-stage-1",
+      stage: "workflow_reconstruction",
+      state: "running",
+      now_ms: 1_000
+    });
+
+    const snapshot = reportStageProgress({
+      run_id: "run-stage-1",
+      stage: "snapshot_freeze",
+      state: "completed",
+      now_ms: 2_000,
+      last_emit_at_ms: workflow.state.last_emit_at_ms
+    });
+
+    expect(workflow.emitted).toBe(true);
+    expect(workflow.event?.message).toBe("workflow_reconstruction:running");
+    expect(snapshot.emitted).toBe(true);
+    expect(snapshot.event?.kind).toBe("terminal");
+    expect(snapshot.event?.message).toBe("snapshot_freeze:completed");
   });
 });

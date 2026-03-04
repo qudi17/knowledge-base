@@ -1,6 +1,7 @@
 import type { FailureContext, TerminalReason } from "./types";
 
 export type ProgressEventKind = "transition" | "cadence" | "terminal";
+export type StageProgressState = "running" | "retrying" | "paused" | "failed" | "completed";
 
 export interface ProgressEvent {
   run_id: string;
@@ -38,6 +39,19 @@ export interface EmitProgressResult {
   emitted: boolean;
   event?: ProgressEvent;
   state: ProgressReporterState;
+}
+
+export interface ReportStageProgressInput {
+  run_id: string;
+  stage: string;
+  state: StageProgressState;
+  now_ms: number;
+  now_iso?: string;
+  last_emit_at_ms?: number;
+  attempt?: number;
+  terminal_reason?: TerminalReason;
+  failure_context?: FailureContext;
+  message?: string;
 }
 
 export interface FinalSummaryInput {
@@ -115,6 +129,41 @@ export function emitProgress(input: EmitProgressInput): EmitProgressResult {
       last_emit_at_ms: input.now_ms
     }
   };
+}
+
+function stageDefaultMessage(stage: string, state: StageProgressState): string {
+  if (stage === "workflow_reconstruction") {
+    return `workflow_reconstruction:${state}`;
+  }
+
+  if (stage === "snapshot_freeze") {
+    return `snapshot_freeze:${state}`;
+  }
+
+  if (stage === "broad_scan") {
+    return `broad_scan:${state}`;
+  }
+
+  return `${stage}:${state}`;
+}
+
+export function reportStageProgress(input: ReportStageProgressInput): EmitProgressResult {
+  const kind: ProgressEventKind =
+    input.state === "failed" || input.state === "completed" ? "terminal" : "transition";
+
+  return emitProgress({
+    run_id: input.run_id,
+    stage: input.stage,
+    state: input.state,
+    kind,
+    now_ms: input.now_ms,
+    now_iso: input.now_iso,
+    last_emit_at_ms: input.last_emit_at_ms,
+    attempt: input.attempt,
+    terminal_reason: input.terminal_reason,
+    failure_context: input.failure_context,
+    message: input.message ?? stageDefaultMessage(input.stage, input.state)
+  });
 }
 
 function priority(failure: FailureContext): number {

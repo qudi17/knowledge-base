@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { listCheckpoints } from "../../skills/github-researcher/lib/reliability/checkpoint-store";
 import { runWithReliability } from "../../skills/github-researcher/lib/reliability/orchestrator";
 
 describe("reliability orchestrator", () => {
@@ -139,5 +140,84 @@ describe("reliability orchestrator", () => {
     expect(resumed.outputs.intake).toBeUndefined();
     expect(resumed.outputs.analysis).toEqual({ analysis: "ok" });
     expect(secondStageAttempts).toBeGreaterThanOrEqual(1);
+  });
+
+  it("preserves core-first checkpoint semantics across interruption and resume", async () => {
+    const events: string[] = [];
+
+    const first = await runWithReliability({
+      run_id: "run-orch-core-first",
+      input: { repo: "owner/repo" },
+      input_fingerprint: "fp-orch-core-first",
+      core_first: {
+        enabled: true
+      },
+      progress_sink: (event) => events.push(`${event.kind}:${event.stage}:${event.state}:${event.message ?? ""}`),
+      stages: [
+        {
+          name: "entry_modules",
+          run: async () => ({ intake: true })
+        },
+        {
+          name: "workflow_reconstruction",
+          run: async () => {
+            throw {
+              status_code: 503,
+              message: "temporary interruption",
+              stage: "workflow_reconstruction"
+            };
+          }
+        },
+        {
+          name: "snapshot_freeze",
+          run: async () => ({ frozen: true })
+        }
+      ]
+    });
+
+    expect(first.status).toBe("failed");
+    expect(events.some((line) => line.includes("workflow_reconstruction:running"))).toBe(true);
+
+    const resumed = await runWithReliability({
+      run_id: "run-orch-core-first",
+      input: { repo: "owner/repo" },
+      input_fingerprint: "fp-orch-core-first",
+      core_first: {
+        enabled: true,
+        conflict_detected: true,
+        revalidation_reason: "new contradiction in dependency evidence"
+      },
+      progress_sink: (event) => events.push(`${event.kind}:${event.stage}:${event.state}:${event.message ?? ""}`),
+      stages: [
+        {
+          name: "entry_modules",
+          run: async () => ({ intake: true })
+        },
+        {
+          name: "workflow_reconstruction",
+          run: async () => ({ workflows: 1 })
+        },
+        {
+          name: "snapshot_freeze",
+          run: async () => ({ frozen: true })
+        },
+        {
+          name: "broad_scan",
+          run: async () => ({ expanded: true })
+        }
+      ]
+    });
+
+    expect(resumed.start_mode).toBe("resume");
+    expect(resumed.status).toBe("completed");
+    expect(resumed.outputs.entry_modules).toBeUndefined();
+    expect(events.some((line) => line.includes("snapshot_freeze:retrying:revalidation_required"))).toBe(true);
+    expect(events.some((line) => line.includes("broad_scan:paused"))).toBe(true);
+
+    const checkpoints = listCheckpoints("run-orch-core-first");
+    const terminal = checkpoints[checkpoints.length - 1];
+    const snapshot = terminal.progress_snapshot as Record<string, unknown>;
+    expect(Array.isArray(snapshot.core_first_completed_stages)).toBe(true);
+    expect((snapshot.core_first_completed_stages as string[]).includes("broad_scan")).toBe(true);
   });
 });

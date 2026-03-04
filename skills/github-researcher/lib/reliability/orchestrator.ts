@@ -1,5 +1,11 @@
 import { latestIncomplete, saveCheckpoint, type CheckpointRecord } from "./checkpoint-store";
-import { emitProgress, buildFinalSummary, type ProgressEvent, type ProgressReporterState } from "./progress-reporter";
+import {
+  emitProgress,
+  buildFinalSummary,
+  reportStageProgress,
+  type ProgressEvent,
+  type ProgressReporterState
+} from "./progress-reporter";
 import { resolveStartMode } from "./resume-engine";
 import { createRunController } from "./run-controller";
 import type { FailureContext, LocalInputMetadata, SearchContextMetadata, TerminalReason } from "./types";
@@ -19,6 +25,12 @@ export interface ReliabilityRunInput<TInput> {
   started_at_iso?: string;
   now_ms?: () => number;
   progress_sink?: (event: ProgressEvent) => void;
+  core_first?: {
+    enabled: boolean;
+    completed_stages?: string[];
+    conflict_detected?: boolean;
+    revalidation_reason?: string;
+  };
 }
 
 export interface ReliabilityRunResult {
@@ -102,6 +114,72 @@ function emit(
   return emitted.state;
 }
 
+type CoreFirstStage =
+  | "entry_modules"
+  | "core_business"
+  | "supporting_modules"
+  | "workflow_reconstruction"
+  | "snapshot_freeze"
+  | "broad_scan";
+
+function normalizeCoreStage(stageName: string): CoreFirstStage | null {
+  const normalized = stageName.trim().toLowerCase();
+
+  if (normalized === "entry_modules") return "entry_modules";
+  if (normalized === "core_business") return "core_business";
+  if (normalized === "supporting_modules") return "supporting_modules";
+  if (normalized === "workflow_reconstruction") return "workflow_reconstruction";
+  if (normalized === "snapshot_freeze") return "snapshot_freeze";
+  if (normalized === "broad_scan") return "broad_scan";
+  return null;
+}
+
+function emitStage(
+  input: ReliabilityRunInput<unknown>,
+  runId: string,
+  stage: string,
+  state: "running" | "retrying" | "paused" | "failed" | "completed",
+  nowMs: number,
+  reporterState: ProgressReporterState,
+  extra?: { terminal_reason?: TerminalReason; failure_context?: FailureContext; message?: string; attempt?: number }
+): ProgressReporterState {
+  const mapped = normalizeCoreStage(stage);
+  const useCoreFirst = Boolean(input.core_first?.enabled && mapped);
+
+  const emitted = useCoreFirst
+    ? reportStageProgress({
+        run_id: runId,
+        stage: mapped ?? stage,
+        state,
+        now_ms: nowMs,
+        now_iso: toIsoFromNow(nowMs),
+        last_emit_at_ms: reporterState.last_emit_at_ms,
+        terminal_reason: extra?.terminal_reason,
+        failure_context: extra?.failure_context,
+        message: extra?.message,
+        attempt: extra?.attempt
+      })
+    : emitProgress({
+        run_id: runId,
+        stage,
+        state,
+        kind: state === "failed" || state === "completed" ? "terminal" : "transition",
+        now_ms: nowMs,
+        now_iso: toIsoFromNow(nowMs),
+        last_emit_at_ms: reporterState.last_emit_at_ms,
+        terminal_reason: extra?.terminal_reason,
+        failure_context: extra?.failure_context,
+        message: extra?.message,
+        attempt: extra?.attempt
+      });
+
+  if (emitted.emitted && emitted.event && input.progress_sink) {
+    input.progress_sink(emitted.event);
+  }
+
+  return emitted.state;
+}
+
 export async function runWithReliability<TInput>(
   input: ReliabilityRunInput<TInput>
 ): Promise<ReliabilityRunResult> {
@@ -119,10 +197,12 @@ export async function runWithReliability<TInput>(
   let totalAttempts = 0;
   let retriedStages = 0;
   let exhaustedStages = 0;
+  const completedCoreStages = new Set<string>(input.core_first?.completed_stages ?? []);
 
   for (let stageIndex = startIndex; stageIndex < input.stages.length; stageIndex += 1) {
     const stage = input.stages[stageIndex];
     const stageStartedAtMs = now();
+    const coreStage = normalizeCoreStage(stage.name);
 
     saveCheckpoint({
       run_id: input.run_id,
@@ -135,20 +215,27 @@ export async function runWithReliability<TInput>(
         stage_name: stage.name,
         mode: startMode,
         search_context: input.search_context,
-        local_input: input.local_input
+        local_input: input.local_input,
+        core_first_stage: coreStage ?? undefined,
+        core_first_completed_stages: [...completedCoreStages]
       }
     });
 
     reporterState = emit(
-      input.run_id,
-      stage.name,
-      "running",
-      "transition",
-      stageStartedAtMs,
-      reporterState,
-      input.progress_sink,
-      { message: `enter_stage:${stage.name}` }
-    );
+        input.run_id,
+        stage.name,
+        "running",
+        "transition",
+        stageStartedAtMs,
+        reporterState,
+        input.progress_sink,
+        { message: `enter_stage:${stage.name}` }
+      );
+    if (input.core_first?.enabled) {
+      reporterState = emitStage(input as ReliabilityRunInput<unknown>, input.run_id, stage.name, "running", stageStartedAtMs, reporterState, {
+        message: `core_first_enter:${stage.name}`
+      });
+    }
 
     const stageResult = await controller.executeStage({
       name: stage.name,
@@ -156,16 +243,10 @@ export async function runWithReliability<TInput>(
         totalAttempts += 1;
         if (attempt > 1) {
           retriedStages += 1;
-          reporterState = emit(
-            input.run_id,
-            stage.name,
-            "retrying",
-            "transition",
-            now(),
-            reporterState,
-            input.progress_sink,
-            { attempt, message: `retry_attempt:${attempt}` }
-          );
+          reporterState = emitStage(input as ReliabilityRunInput<unknown>, input.run_id, stage.name, "retrying", now(), reporterState, {
+            attempt,
+            message: `retry_attempt:${attempt}`
+          });
         }
 
         reporterState = emit(input.run_id, stage.name, "running", "cadence", now(), reporterState, input.progress_sink, {
@@ -206,7 +287,9 @@ export async function runWithReliability<TInput>(
           stage_name: stage.name,
           mode: startMode,
           search_context: input.search_context,
-          local_input: input.local_input
+          local_input: input.local_input,
+          core_first_stage: coreStage ?? undefined,
+          core_first_completed_stages: [...completedCoreStages]
         },
         error_context: failure
       });
@@ -254,6 +337,9 @@ export async function runWithReliability<TInput>(
     }
 
     outputs[stage.name] = stageResult.value;
+    if (coreStage) {
+      completedCoreStages.add(coreStage);
+    }
 
     const stageCompletedAtMs = now();
     saveCheckpoint({
@@ -267,7 +353,9 @@ export async function runWithReliability<TInput>(
         stage_name: stage.name,
         mode: startMode,
         search_context: input.search_context,
-        local_input: input.local_input
+        local_input: input.local_input,
+        core_first_stage: coreStage ?? undefined,
+        core_first_completed_stages: [...completedCoreStages]
       }
     });
 
@@ -281,6 +369,11 @@ export async function runWithReliability<TInput>(
       input.progress_sink,
       { message: `stage_complete:${stage.name}` }
     );
+    if (input.core_first?.enabled) {
+      reporterState = emitStage(input as ReliabilityRunInput<unknown>, input.run_id, stage.name, "paused", stageCompletedAtMs, reporterState, {
+        message: `core_first_stage_complete:${stage.name}`
+      });
+    }
   }
 
   controller.complete();
@@ -297,7 +390,8 @@ export async function runWithReliability<TInput>(
       mode: startMode,
       outputs,
       search_context: input.search_context,
-      local_input: input.local_input
+      local_input: input.local_input,
+      core_first_completed_stages: [...completedCoreStages]
     }
   });
 
@@ -305,6 +399,11 @@ export async function runWithReliability<TInput>(
     terminal_reason: "completed",
     message: "run_complete"
   });
+  if (input.core_first?.enabled && input.core_first.conflict_detected) {
+    reporterState = emitStage(input as ReliabilityRunInput<unknown>, input.run_id, "snapshot_freeze", "retrying", doneAtMs, reporterState, {
+      message: `revalidation_required:${input.core_first.revalidation_reason ?? "conflict_detected"}`
+    });
+  }
 
   const snapshot = controller.snapshot();
   const summary = buildFinalSummary({
