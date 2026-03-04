@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { buildRunInputFingerprint } from "../../skills/github-researcher/lib/intake/fingerprint";
 import { runRepositoryPreflight } from "../../skills/github-researcher/lib/intake/preflight";
 
 describe("runRepositoryPreflight", () => {
@@ -231,6 +232,46 @@ describe("runRepositoryPreflight", () => {
       expect(result.input_type).toBe("local_path");
       expect(result.normalized.canonical_id).toBe("local:local-repo");
       expect(result.normalized.normalized_path).toBe("/tmp/local-repo");
+    }
+  });
+
+  it("builds stable local fingerprints for equivalent normalized targets", async () => {
+    const a = await runRepositoryPreflight("./local-repo", {
+      localResolverDeps: {
+        cwd: () => "/tmp",
+        homedir: () => "/Users/eddy",
+        realpath: async () => "/tmp/local-repo",
+        access: async () => undefined,
+        stat: async () => ({ isDirectory: () => true }),
+        runGit: async (_cwd, args) => {
+          if (args[0] === "rev-parse") return { ok: true, stdout: "/tmp/local-repo\n" };
+          if (args[0] === "symbolic-ref") return { ok: true, stdout: "main\n" };
+          if (args[0] === "config") return { ok: false };
+          return { ok: false };
+        }
+      }
+    });
+
+    const b = await runRepositoryPreflight("/tmp/local-repo/", {
+      localResolverDeps: {
+        cwd: () => "/tmp",
+        homedir: () => "/Users/eddy",
+        realpath: async () => "/tmp/local-repo",
+        access: async () => undefined,
+        stat: async () => ({ isDirectory: () => true }),
+        runGit: async (_cwd, args) => {
+          if (args[0] === "rev-parse") return { ok: true, stdout: "/tmp/local-repo\n" };
+          if (args[0] === "symbolic-ref") return { ok: true, stdout: "main\n" };
+          if (args[0] === "config") return { ok: false };
+          return { ok: false };
+        }
+      }
+    });
+
+    expect(a.ok).toBe(true);
+    expect(b.ok).toBe(true);
+    if (a.ok && b.ok) {
+      expect(buildRunInputFingerprint({ preflight: a })).toBe(buildRunInputFingerprint({ preflight: b }));
     }
   });
 });
