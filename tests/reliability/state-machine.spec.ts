@@ -5,6 +5,7 @@ import {
   getAllowedTransitions,
   isTerminalState
 } from "../../skills/github-researcher/lib/reliability/state-machine";
+import { createRunController } from "../../skills/github-researcher/lib/reliability/run-controller";
 
 describe("state-machine", () => {
   it("accepts legal transitions", () => {
@@ -36,5 +37,40 @@ describe("state-machine", () => {
   it("exposes transition table for orchestration callers", () => {
     expect(getAllowedTransitions("queued")).toEqual(["running", "cancelled"]);
     expect(getAllowedTransitions("failed")).toEqual([]);
+  });
+});
+
+describe("run-controller completion behavior", () => {
+  it("continues toward completion on successful stage execution", async () => {
+    const controller = createRunController("run-1");
+
+    const stageResult = await controller.executeStage({
+      name: "stage-a",
+      run: async () => "ok"
+    });
+
+    expect(stageResult.ok).toBe(true);
+    controller.complete();
+
+    const snapshot = controller.snapshot();
+    expect(snapshot.state).toBe("completed");
+    expect(snapshot.terminal_reason).toBe("completed");
+  });
+
+  it("routes retry exhaustion to failed terminal state", async () => {
+    const controller = createRunController("run-2");
+
+    const stageResult = await controller.executeStage({
+      name: "stage-b",
+      run: async () => {
+        throw { status_code: 503, message: "down", stage: "stage-b" };
+      }
+    });
+
+    expect(stageResult.ok).toBe(false);
+    const snapshot = controller.snapshot();
+    expect(snapshot.state).toBe("failed");
+    expect(snapshot.terminal_reason).toBe("transient_exhausted");
+    expect(snapshot.failure_context?.stage).toBe("stage-b");
   });
 });
