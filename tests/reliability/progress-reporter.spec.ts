@@ -128,4 +128,14 @@ describe("progress-reporter reportStageProgress", () => {
     expect(snapshot.event?.kind).toBe("terminal");
     expect(snapshot.event?.message).toBe("snapshot_freeze:completed");
   });
+
+  it("emits coverage phase default stage messages", () => {
+    const planning = reportStageProgress({
+      run_id: "run-stage-coverage",
+      stage: "coverage_phase_planning",
+      state: "running",
+      now_ms: 1_000
+    });
+    expect(planning.event?.message).toBe("coverage_phase_planning:running");
+  });
 });

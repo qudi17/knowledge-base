@@ -220,4 +220,31 @@ describe("reliability orchestrator", () => {
     expect(Array.isArray(snapshot.core_first_completed_stages)).toBe(true);
     expect((snapshot.core_first_completed_stages as string[]).includes("broad_scan")).toBe(true);
   });
+
+  it("persists phased-coverage checkpoint metadata through completion", async () => {
+    const result = await runWithReliability({
+      run_id: "run-orch-coverage-1",
+      input: { repo: "owner/repo" },
+      input_fingerprint: "fp-orch-coverage-1",
+      coverage_phases: {
+        completed_phase_ids: ["06.1"],
+        remaining_scope_queue: ["06.2"]
+      },
+      stages: [
+        {
+          name: "coverage_phase_execution",
+          run: async () => ({ done: true })
+        },
+        {
+          name: "coverage_merge",
+          run: async () => ({ merged: true })
+        }
+      ]
+    });
+
+    expect(result.status).toBe("completed");
+    const checkpoints = listCheckpoints("run-orch-coverage-1");
+    const last = checkpoints[checkpoints.length - 1].progress_snapshot as Record<string, unknown>;
+    expect((last.coverage_phases as { completed_phase_ids: string[] }).completed_phase_ids).toEqual(["06.1"]);
+  });
 });

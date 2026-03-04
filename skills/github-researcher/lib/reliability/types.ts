@@ -87,3 +87,8 @@ export interface LocalInputMetadata {
   repo_root: string;
   default_branch: string;
 }
+
+export interface CoveragePhaseProgressMetadata {
+  completed_phase_ids: string[];
+  remaining_scope_queue: string[];
+}

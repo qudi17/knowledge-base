@@ -8,7 +8,13 @@ import {
 } from "./progress-reporter";
 import { resolveStartMode } from "./resume-engine";
 import { createRunController } from "./run-controller";
-import type { FailureContext, LocalInputMetadata, SearchContextMetadata, TerminalReason } from "./types";
+import type {
+  CoveragePhaseProgressMetadata,
+  FailureContext,
+  LocalInputMetadata,
+  SearchContextMetadata,
+  TerminalReason
+} from "./types";
 
 export interface ReliabilityStage<TInput, TResult = unknown> {
   name: string;
@@ -31,6 +37,7 @@ export interface ReliabilityRunInput<TInput> {
     conflict_detected?: boolean;
     revalidation_reason?: string;
   };
+  coverage_phases?: CoveragePhaseProgressMetadata;
 }
 
 export interface ReliabilityRunResult {
@@ -120,7 +127,10 @@ type CoreFirstStage =
   | "supporting_modules"
   | "workflow_reconstruction"
   | "snapshot_freeze"
-  | "broad_scan";
+  | "broad_scan"
+  | "coverage_phase_planning"
+  | "coverage_phase_execution"
+  | "coverage_merge";
 
 function normalizeCoreStage(stageName: string): CoreFirstStage | null {
   const normalized = stageName.trim().toLowerCase();
@@ -131,6 +141,9 @@ function normalizeCoreStage(stageName: string): CoreFirstStage | null {
   if (normalized === "workflow_reconstruction") return "workflow_reconstruction";
   if (normalized === "snapshot_freeze") return "snapshot_freeze";
   if (normalized === "broad_scan") return "broad_scan";
+  if (normalized === "coverage_phase_planning") return "coverage_phase_planning";
+  if (normalized === "coverage_phase_execution") return "coverage_phase_execution";
+  if (normalized === "coverage_merge") return "coverage_merge";
   return null;
 }
 
@@ -144,7 +157,7 @@ function emitStage(
   extra?: { terminal_reason?: TerminalReason; failure_context?: FailureContext; message?: string; attempt?: number }
 ): ProgressReporterState {
   const mapped = normalizeCoreStage(stage);
-  const useCoreFirst = Boolean(input.core_first?.enabled && mapped);
+  const useCoreFirst = Boolean((input.core_first?.enabled || input.coverage_phases) && mapped);
 
   const emitted = useCoreFirst
     ? reportStageProgress({
@@ -216,6 +229,7 @@ export async function runWithReliability<TInput>(
         mode: startMode,
         search_context: input.search_context,
         local_input: input.local_input,
+        coverage_phases: input.coverage_phases,
         core_first_stage: coreStage ?? undefined,
         core_first_completed_stages: [...completedCoreStages]
       }
@@ -288,6 +302,7 @@ export async function runWithReliability<TInput>(
           mode: startMode,
           search_context: input.search_context,
           local_input: input.local_input,
+          coverage_phases: input.coverage_phases,
           core_first_stage: coreStage ?? undefined,
           core_first_completed_stages: [...completedCoreStages]
         },
@@ -354,6 +369,7 @@ export async function runWithReliability<TInput>(
         mode: startMode,
         search_context: input.search_context,
         local_input: input.local_input,
+        coverage_phases: input.coverage_phases,
         core_first_stage: coreStage ?? undefined,
         core_first_completed_stages: [...completedCoreStages]
       }
@@ -391,6 +407,7 @@ export async function runWithReliability<TInput>(
       outputs,
       search_context: input.search_context,
       local_input: input.local_input,
+      coverage_phases: input.coverage_phases,
       core_first_completed_stages: [...completedCoreStages]
     }
   });

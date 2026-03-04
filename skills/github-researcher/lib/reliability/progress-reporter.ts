@@ -143,6 +143,15 @@ function stageDefaultMessage(stage: string, state: StageProgressState): string {
   if (stage === "broad_scan") {
     return `broad_scan:${state}`;
   }
+  if (stage === "coverage_phase_planning") {
+    return `coverage_phase_planning:${state}`;
+  }
+  if (stage === "coverage_phase_execution") {
+    return `coverage_phase_execution:${state}`;
+  }
+  if (stage === "coverage_merge") {
+    return `coverage_merge:${state}`;
+  }
 
   return `${stage}:${state}`;
 }
