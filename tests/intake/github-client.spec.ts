@@ -59,6 +59,59 @@ describe("fetchCanonicalRepository", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error.error_code).toBe("PRIVATE_REPOSITORY_UNSUPPORTED");
+      expect(result.error.error_class).toBe("PERMISSION_OR_UNSUPPORTED");
+    }
+  });
+
+  it("retries transient upstream failures with bounded max attempts", async () => {
+    let attempts = 0;
+
+    const result = await fetchCanonicalRepository("openai/flaky-repo", "openai", "flaky-repo", {
+      httpClient: {
+        async request() {
+          attempts += 1;
+          return {
+            ok: false,
+            status: 503,
+            statusText: "Service Unavailable",
+            headers: {}
+          };
+        }
+      }
+    });
+
+    expect(result.ok).toBe(false);
+    expect(attempts).toBe(3);
+    if (!result.ok) {
+      expect(result.error.error_class).toBe("TRANSIENT_ERROR");
+      expect(result.error.error_code).toBe("TRANSIENT_UPSTREAM_FAILURE");
+      expect(result.error.retryable).toBe(true);
+    }
+  });
+
+  it("does not retry non-retryable not-found failures", async () => {
+    let attempts = 0;
+
+    const result = await fetchCanonicalRepository("openai/missing-repo", "openai", "missing-repo", {
+      httpClient: {
+        async request() {
+          attempts += 1;
+          return {
+            ok: false,
+            status: 404,
+            statusText: "Not Found",
+            headers: {}
+          };
+        }
+      }
+    });
+
+    expect(result.ok).toBe(false);
+    expect(attempts).toBe(1);
+    if (!result.ok) {
+      expect(result.error.error_class).toBe("INPUT_ERROR");
+      expect(result.error.error_code).toBe("REPOSITORY_NOT_FOUND");
+      expect(result.error.retryable).toBe(false);
     }
   });
 });
