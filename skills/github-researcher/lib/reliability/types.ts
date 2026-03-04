@@ -69,3 +69,14 @@ export interface RunSnapshot {
   terminal_reason?: TerminalReason;
   failure_context?: FailureContext;
 }
+
+export interface SearchContextMetadata {
+  query_text: string;
+  sort_mode: string;
+  page: number;
+  result_rank: number;
+  selected_full_name: string;
+  selected_html_url: string;
+  selected_stars: number;
+  selected_updated_at: string;
+}
