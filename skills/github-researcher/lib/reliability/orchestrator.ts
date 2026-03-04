@@ -2,7 +2,7 @@ import { latestIncomplete, saveCheckpoint, type CheckpointRecord } from "./check
 import { emitProgress, buildFinalSummary, type ProgressEvent, type ProgressReporterState } from "./progress-reporter";
 import { resolveStartMode } from "./resume-engine";
 import { createRunController } from "./run-controller";
-import type { FailureContext, TerminalReason } from "./types";
+import type { FailureContext, SearchContextMetadata, TerminalReason } from "./types";
 
 export interface ReliabilityStage<TInput, TResult = unknown> {
   name: string;
@@ -14,6 +14,7 @@ export interface ReliabilityRunInput<TInput> {
   input: TInput;
   input_fingerprint: string;
   stages: ReliabilityStage<TInput>[];
+  search_context?: SearchContextMetadata;
   started_at_iso?: string;
   now_ms?: () => number;
   progress_sink?: (event: ProgressEvent) => void;
@@ -27,6 +28,7 @@ export interface ReliabilityRunResult {
   transition_trace: string[];
   summary: ReturnType<typeof buildFinalSummary>;
   outputs: Record<string, unknown>;
+  search_context?: SearchContextMetadata;
 }
 
 function toIsoFromNow(nowMs: number): string {
@@ -129,7 +131,8 @@ export async function runWithReliability<TInput>(
       progress_snapshot: {
         stage_index: stageIndex,
         stage_name: stage.name,
-        mode: startMode
+        mode: startMode,
+        search_context: input.search_context
       }
     });
 
@@ -198,7 +201,8 @@ export async function runWithReliability<TInput>(
         progress_snapshot: {
           stage_index: stageIndex,
           stage_name: stage.name,
-          mode: startMode
+          mode: startMode,
+          search_context: input.search_context
         },
         error_context: failure
       });
@@ -239,7 +243,8 @@ export async function runWithReliability<TInput>(
         terminal_reason: snapshot.terminal_reason ?? "transient_exhausted",
         transition_trace: snapshot.transition_trace,
         summary,
-        outputs
+        outputs,
+        search_context: input.search_context
       };
     }
 
@@ -255,7 +260,8 @@ export async function runWithReliability<TInput>(
       progress_snapshot: {
         stage_index: stageIndex,
         stage_name: stage.name,
-        mode: startMode
+        mode: startMode,
+        search_context: input.search_context
       }
     });
 
@@ -283,7 +289,8 @@ export async function runWithReliability<TInput>(
       stage_index: input.stages.length - 1,
       stage_name: "run",
       mode: startMode,
-      outputs
+      outputs,
+      search_context: input.search_context
     }
   });
 
@@ -313,6 +320,7 @@ export async function runWithReliability<TInput>(
     terminal_reason: "completed",
     transition_trace: snapshot.transition_trace,
     summary,
-    outputs
+    outputs,
+    search_context: input.search_context
   };
 }
