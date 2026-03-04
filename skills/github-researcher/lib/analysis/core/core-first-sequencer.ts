@@ -9,6 +9,12 @@ export interface SequenceState {
   revalidation_required: boolean;
 }
 
+export interface CorePhaseOrderInput {
+  module_id: string;
+  stage: Exclude<CoreStage, "workflow_reconstruction" | "snapshot_freeze" | "broad_scan">;
+  weight?: number;
+}
+
 const ORDER: CoreStage[] = [
   "entry_modules",
   "core_business",
@@ -67,4 +73,22 @@ export function runCoreFirstSequence(params: {
     transition_allowed: transition.allowed,
     revalidation_required: Boolean(params.conflict_detected)
   };
+}
+
+export function preserveCoreFirstPhaseOrder(modules: CorePhaseOrderInput[]): string[] {
+  const stageOrder: Record<CorePhaseOrderInput["stage"], number> = {
+    entry_modules: 0,
+    core_business: 1,
+    supporting_modules: 2
+  };
+
+  return [...modules]
+    .sort((a, b) => {
+      const stageDiff = stageOrder[a.stage] - stageOrder[b.stage];
+      if (stageDiff !== 0) return stageDiff;
+      const weightDiff = (b.weight ?? 0) - (a.weight ?? 0);
+      if (weightDiff !== 0) return weightDiff;
+      return a.module_id.localeCompare(b.module_id);
+    })
+    .map((item) => item.module_id);
 }
