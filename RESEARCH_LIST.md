@@ -76,13 +76,16 @@
 
 ### GitHub 项目研究
 
-| 项目 | Stars | 类型 | GitHub 地址 | 完成日期 | 报告位置 | 完整性评分 |
-|------|-------|------|-----------|---------|---------|------------|
-| **MarkItDown** | Microsoft | 文档转换 | [GitHub](https://github.com/microsoft/markitdown) | 2026-03-02 | [.planning/markitdown-research/](../.planning/markitdown-research/) | 92% ⭐⭐⭐⭐⭐ |
-| **nanobot** | 23,839 | Agent 框架 | [GitHub](https://github.com/HKUDS/nanobot) | 2026-03-02 | [GitHub/nanobot/](./GitHub/nanobot/) | 98.75% ⭐⭐⭐⭐⭐ |
-| **MemoryBear** | - | 记忆平台 | [GitHub](https://github.com/qudi17/MemoryBear) | 2026-03-02 | [GitHub/MemoryBear/](./GitHub/MemoryBear/) | ✅ 已完成 |
-| **LlamaIndex** | 35,000+ | RAG 框架 | [GitHub](https://github.com/run-llama/llama_index) | 2026-03-02 | [GitHub/llamaindex/](./GitHub/llamaindex/) | 98.8% ⭐⭐⭐⭐⭐ |
-| **everything-claude-code** | - | Agent 技能框架 | [GitHub](https://github.com/affaan-m/everything-claude-code) | 2026-03-02 | [GitHub/everything-claude-code/](./GitHub/everything-claude-code/) | 98% ⭐⭐⭐⭐⭐ |
+| 项目 | Stars | 类型 | GitHub 地址 | 完成日期 | 报告位置 | 完整性评分 | 标签（一级） |
+|------|-------|------|-----------|---------|---------|------------|-------------|
+| **MarkItDown** | Microsoft | 文档转换 | [GitHub](https://github.com/microsoft/markitdown) | 2026-03-03 | [GitHub/markitdown/](./GitHub/markitdown/) | 92% ⭐⭐⭐⭐⭐ | Data, Dev-Tool, RAG |
+| **nanobot** | 23,839 | Agent 框架 | [GitHub](https://github.com/HKUDS/nanobot) | 2026-03-02 | [GitHub/nanobot/](./GitHub/nanobot/) | 98.75% ⭐⭐⭐⭐⭐ | Agent, Dev-Tool, Code |
+| **MemoryBear** | - | 记忆平台 | [GitHub](https://github.com/qudi17/MemoryBear) | 2026-03-02 | [GitHub/MemoryBear/](./GitHub/MemoryBear/) | 96.5% ⭐⭐⭐⭐⭐ | Memory, RAG, Agent, Workflow |
+| **LlamaIndex** | 35,000+ | RAG 框架 | [GitHub](https://github.com/run-llama/llama_index) | 2026-03-02 | [GitHub/llamaindex/](./GitHub/llamaindex/) | 98.8% ⭐⭐⭐⭐⭐ | RAG, Data, Dev-Tool |
+| **everything-claude-code** | - | Agent 技能框架 | [GitHub](https://github.com/affaan-m/everything-claude-code) | 2026-03-02 | [GitHub/everything-claude-code/](./GitHub/everything-claude-code/) | 98% ⭐⭐⭐⭐⭐ | Agent, Code, Dev-Tool |
+| **RuView** | - | WiFi 感知 | [GitHub](https://github.com/ruvnet/RuView) | 2026-03-03 | [GitHub/ruview/](./GitHub/ruview/) | 99.6% ⭐⭐⭐⭐⭐ | Data, Search |
+| **Claude Agent SDK** | - | Agent SDK | [GitHub](https://github.com/anthropics/claude-agent-sdk-python) | 2026-03-03 | [GitHub/claude-agent-sdk-python/](./GitHub/claude-agent-sdk-python/) | 98.7% ⭐⭐⭐⭐⭐ | Agent, SDK, Dev-Tool |
+| **deepagents** | 参考 GitHub | Agent 框架 | [GitHub](https://github.com/langchain-ai/deepagents) | 2026-03-04 | [GitHub/deepagents/](./GitHub/deepagents/) | 92% ⭐⭐⭐⭐⭐ | Agent, Workflow, Code |
 
 ### 理论研究
 
@@ -111,9 +114,9 @@
 |------|------|
 | **待研究** | 27 个（含 8 个 RAG 框架） |
 | **研究中** | 0 个 |
-| **已完成** | 14 个 (6 GitHub 项目 + 8 理论) |
+| **已完成** | 15 个 (7 GitHub 项目 + 8 理论) |
 | **已暂停** | 0 个 |
-| **总计** | 20 个 |
+| **总计** | 21 个 |
 
 **优先级分布**:
 - ⭐⭐⭐ 高优先级：6 个
@@ -150,6 +153,8 @@
 
 | 日期 | 更新内容 | 操作 |
 |------|---------|------|
+| 2026-03-04 | 完成 deepagents 深度研究 | 11 篇研究报告，完整性评分 92%，Level 5 深度，14 阶段完整执行（入口点普查/模块化分析/架构分析/设计模式识别），5 层架构分析，6 种设计模式识别，Middleware 模式/Protocol 后端/子代理系统深度分析，全量更新 Agent-comparison.md 和 Workflow-comparison.md |
+| 2026-03-03 | 完成 MarkItDown 深度研究 | 8 篇研究报告，完整性评分 92%，Level 5 深度，核心 14 阶段执行，5 层架构分析，8 种设计模式识别，PDF 表格提取/Magika 智能识别/优先级调度机制深度分析 |
 | 2026-03-02 | 完成 MemoryBear 深度研究 | 11 篇研究报告，完整性评分 96.5%，Level 5 深度，14 阶段完整执行，5 层架构分析，12 种设计模式识别，ACT-R 遗忘引擎/GraphRAG 双引擎/LangGraph 工作流深度分析 |
 | 2026-03-02 | 完成 LlamaIndex 深度研究 | 11 篇研究报告，完整性评分 98.8%，14 阶段完整执行，5 层架构分析，8 种设计模式识别 |
 | 2026-03-02 | 完成 nanobot 深度研究 | 11 篇研究报告，完整性评分 98.75%，入口点普查/模块化分析/调用链追踪/知识链路/架构分析/代码覆盖率/设计模式识别 |
