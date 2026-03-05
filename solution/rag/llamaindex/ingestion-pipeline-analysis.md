@@ -310,6 +310,21 @@ def _delete_old_nodes(self, doc_id: str):
 
 **源码**: [`pipeline.py:212-260`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py#L212-L260)
 
+> **验证结论**: ✅ **你的猜想是正确的！**
+> 
+> 转换链是**按顺序执行**的，每个 transformation 的**输出**作为下一个 transformation 的**输入**。
+> 
+> **数据流**：
+> ```
+> Document (单个文档)
+>   ↓
+> [Document → SentenceSplitter] → [Node1, Node2, ... NodeN] (chunks)
+>   ↓
+> [Node1, Node2, ... NodeN] → [TitleExtractor] → [Node1', Node2', ... NodeN'] (添加 metadata)
+>   ↓
+> [Node1', Node2', ... NodeN'] → [Embedding] → [Node1'', Node2'', ... NodeN''] (添加 embedding)
+> ```
+
 ```python
 # 源码位置：llama-index-core/llama_index/core/ingestion/pipeline.py
 # https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py#L212-L260
@@ -381,7 +396,99 @@ def _get_cache_key(
 
 ---
 
+### 3.5 转换链执行流程验证 ⭐
+
+**验证你的猜想**：
+
+```python
+from llama_index.core import Document
+from llama_index.core.ingestion import IngestionPipeline
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.extractors import TitleExtractor
+from llama_index.embeddings.openai import OpenAIEmbedding
+
+# 创建管道
+pipeline = IngestionPipeline(
+    transformations=[
+        SentenceSplitter(chunk_size=512, chunk_overlap=50),  # 1. Splitter
+        TitleExtractor(llm=llm, nodes=5),                     # 2. Extractor
+        OpenAIEmbedding(),                                     # 3. Embedding
+    ],
+)
+
+# 运行
+documents = [Document(text="这是一篇长文档...")]
+nodes = pipeline.run(documents=documents)
+```
+
+**执行流程**：
+
+```
+Step 1: Document 级别输入
+┌─────────────────────────────────────┐
+│ Input: [Document]                   │
+│  - Document 1: "这是一篇长文档..."    │
+└─────────────────────────────────────┘
+              ↓
+Step 2: SentenceSplitter 执行 (Document → Chunks)
+┌─────────────────────────────────────┐
+│ SentenceSplitter([Document])        │
+│  - 输入：单个 Document               │
+│  - 输出：[Node1, Node2, ... Node10] │  ← 10 个 chunks
+└─────────────────────────────────────┘
+              ↓
+Step 3: TitleExtractor 执行 (Chunks → Chunks + metadata)
+┌─────────────────────────────────────┐
+│ TitleExtractor([Node1, ... Node10]) │
+│  - 输入：10 个 Node（chunks）          │
+│  - 输出：[Node1', ... Node10']      │  ← 添加 metadata['title']
+└─────────────────────────────────────┘
+              ↓
+Step 4: OpenAIEmbedding 执行 (Chunks + embedding)
+┌─────────────────────────────────────┐
+│ OpenAIEmbedding([Node1', ...])      │
+│  - 输入：10 个 Node（chunks+metadata）  │
+│  - 输出：[Node1'', ... Node10'']    │  ← 添加 embedding
+└─────────────────────────────────────┘
+              ↓
+Step 5: 返回最终结果
+┌─────────────────────────────────────┐
+│ Output: [Node1'', ... Node10'']     │
+│  - 每个 Node 包含：                   │
+│    - text: chunk 文本                │
+│    - metadata: {'title': '...'}     │
+│    - embedding: [0.1, 0.2, ...]     │
+└─────────────────────────────────────┘
+```
+
+**关键验证点**：
+
+| Transformation | 输入类型 | 输出类型 | 输入粒度 | 输出粒度 |
+|---------------|---------|---------|---------|---------|
+| **SentenceSplitter** | Document | List[Node] | 单个 Document | N 个 Chunks |
+| **TitleExtractor** | List[Node] | List[Node] | Chunk 级别 | Chunk 级别（+metadata） |
+| **Embedding** | List[Node] | List[Node] | Chunk 级别 | Chunk 级别（+embedding） |
+
+**结论**：
+- ✅ **Splitter** 输入是 Document 级别，输出是 Chunk 级别
+- ✅ **Extractor** 输入是 Chunk 级别，输出是 Chunk 级别（添加 metadata）
+- ✅ **Embedding** 输入是 Chunk 级别，输出是 Chunk 级别（添加 embedding）
+- ✅ **转换链是流水线式的**，前一个的输出是后一个的输入
+
+---
+
 ### 3.5 向量存储插入
+
+**源码**: [`pipeline.py:262-285`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py#L262-L285)
+
+```python
+# 源码位置：llama-index-core/llama_index/core/ingestion/pipeline.py
+# https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py#L262-L285
+```
+
+---
+
+### 3.6 存储到 Docstore
 
 ```python
 def _insert_nodes(self, nodes: List[BaseNode]):
@@ -413,9 +520,64 @@ def _insert_nodes(self, nodes: List[BaseNode]):
 
 ---
 
-## 四、Transformation 接口
+## 四、Transformation 接口详解
 
-### 4.1 基础接口
+### 4.1 输入输出类型验证 ⭐
+
+**验证结论**：不同类型的 Transformation 有不同的输入/输出粒度。
+
+| Transformation 类型 | 输入 | 输出 | 典型代表 |
+|-------------------|------|------|---------|
+| **NodeParser** (分块器) | Document | List[Node] | SentenceSplitter, TokenTextSplitter |
+| **Extractor** (提取器) | Node | Node (+metadata) | TitleExtractor, QuestionsAnsweredExtractor |
+| **Embedding** (向量化) | Node | Node (+embedding) | OpenAIEmbedding, HuggingFaceEmbedding |
+
+**代码验证**：
+
+```python
+# SentenceSplitter: Document → List[Node]
+# 源码：https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/node_parser/text/sentence.py
+class SentenceSplitter:
+    def __call__(self, nodes: List[BaseNode]) -> List[BaseNode]:
+        # 输入：[Document] (1 个)
+        # 输出：[Node1, Node2, ... NodeN] (N 个 chunks)
+        result = []
+        for node in nodes:
+            chunks = self._split_text(node.text)  # 1 → N
+            for chunk in chunks:
+                result.append(TextNode(text=chunk))
+        return result
+
+# TitleExtractor: Node → Node (+metadata)
+# 源码：https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/extractors/metadata_extractors.py
+class TitleExtractor:
+    def extract(self, nodes: Sequence[BaseNode]) -> List[Dict]:
+        # 输入：[Node1, Node2, ... NodeN] (N 个 chunks)
+        # 输出：[{'title': '...'}, {'title': '...'}, ...] (N 个 metadata)
+        # 注意：不创建新 Node，只添加 metadata
+        results = []
+        for node in nodes:
+            title = self.llm.complete(prompt).text
+            results.append({'title': title})
+        return results
+
+# OpenAIEmbedding: Node → Node (+embedding)
+# 源码：https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/embeddings/base.py
+class OpenAIEmbedding:
+    def __call__(self, nodes: List[BaseNode]) -> List[BaseNode]:
+        # 输入：[Node1, Node2, ... NodeN] (N 个 chunks)
+        # 输出：[Node1, Node2, ... NodeN] (N 个 chunks + embedding)
+        # 注意：不创建新 Node，只添加 embedding
+        texts = [node.text for node in nodes]
+        embeddings = self._get_text_embeddings_batch(texts)
+        for node, embedding in zip(nodes, embeddings):
+            node.embedding = embedding
+        return nodes
+```
+
+---
+
+### 4.2 基础接口
 
 **源码**: [`schema.py:TransformComponent`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/schema.py#L580-L620)
 
