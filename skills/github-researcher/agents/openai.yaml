@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub Reuse Researcher"
+  short_description: "Find reusable code patterns from GitHub projects fast"
+  default_prompt: "Use $github-researcher to find the best implementation pattern and reusable code units for this feature from GitHub repositories."

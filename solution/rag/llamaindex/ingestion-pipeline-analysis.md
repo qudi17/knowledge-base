@@ -477,61 +477,60 @@ Step 5: 返回最终结果
 
 ---
 
-### 3.6 重要发现：批量优化失效 ⚠️
+### 3.6 重要更正：批量处理生效 ✅
 
-**问题**：Pipeline 逐个 node 处理，导致 Extractor 和 Embedding 的批量优化失效！
+**更正**：之前的分析有误，实际 Pipeline 是**批量处理**的！
 
-**场景**：
+**正确执行流程**：
+```python
+# pipeline.py 实际执行（更正后）
+def _run_transformations(self, nodes: List[BaseNode]) -> List[BaseNode]:
+    """对 nodes 列表运行所有转换"""
+    
+    for transformation in self.transformations:  # ← 只有对 transformations 的循环
+        # 直接对所有 nodes 调用 transformation
+        nodes = transformation(nodes)  # ← 批量传入所有 nodes！
+    
+    return nodes
+```
+
+**实际执行**：
 ```python
 # 10 个文档，每个文档 10 个 chunks
 documents = [Document(...) for _ in range(10)]
 
-pipeline = IngestionPipeline(
-    transformations=[
-        SentenceSplitter(chunk_size=512),
-        TitleExtractor(llm=llm, nodes=5),  # 期望每 5 个 nodes 调用 1 次 LLM
-        OpenAIEmbedding(),
-    ],
-)
+# Splitter 执行
+nodes = splitter(documents)  # 10 个 Documents → 100 个 Chunks
 
-nodes = pipeline.run(documents=documents)
+# Extractor 执行（批量！）
+nodes = extractor(nodes)  # 100 个 Chunks → 100 个 Chunks (+metadata)
+# TitleExtractor(nodes=5) 会内部批量处理：
+# - 100 chunks / 5 = 20 次 LLM 调用 ✅
+
+# Embedding 执行（批量！）
+nodes = embedder(nodes)  # 100 个 Chunks → 100 个 Chunks (+embedding)
+# OpenAIEmbedding 批量调用 API
 ```
 
-**预期**（批量优化）：
+**成本计算（正确）**：
 ```
+预期（批量优化生效）：
 TitleExtractor(nodes=5):
 - 100 chunks / 5 = 20 次 LLM 调用
-- 成本：20 × $0.001 = $0.02
+- 成本：20 × $0.001 = $0.02 ✅
+
+Embedding:
+- 批量调用（embed_batch_size=128）
+- 100 chunks / 128 = 1 次 API 调用
+- 成本：极低 ✅
 ```
 
-**实际**（逐个处理）：
-```
-TitleExtractor:
-- 100 chunks = 100 次 LLM 调用 ❌
-- 成本：100 × $0.001 = $0.10（浪费 5 倍！）
-```
+**结论**：
+- ✅ **批量优化生效**：Extractor 和 Embedding 都批量处理
+- ✅ **成本合理**：不会浪费 5 倍
+- ✅ **nodes=5 参数有效**：TitleExtractor 每 5 个 nodes 调用 1 次 LLM
 
-**原因**：
-```python
-# pipeline.py 实际执行
-for node in nodes_to_process:  # 遍历每个 node
-    transformed_nodes = self._run_transformations(node)
-    
-    # _run_transformations 内部
-    for n in nodes:
-        result = transformation([n])  # ← 每次只传入 1 个 node！
-```
-
-**影响**：
-- Extractor 批量参数（nodes=5）失效
-- Embedding 批量优化失效
-- **成本增加 5 倍**
-
-**详见**: [`ingestion-pipeline-transformation-execution.md`](./ingestion-pipeline-transformation-execution.md)
-
-**优化建议**：
-1. 短期：意识到成本问题，选择性使用 Extractor
-2. 长期：向 LlamaIndex 提交 issue 建议批量运行 transformations
+**详见**: [`ingestion-pipeline-transformation-execution.md`](./ingestion-pipeline-transformation-execution.md)（已更正）
 
 ---
 

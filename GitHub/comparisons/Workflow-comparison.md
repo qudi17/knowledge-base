@@ -1,178 +1,209 @@
-# Workflow 框架深度对比分析
+# Workflow 框架项目对比
 
 **最后更新**: 2026-03-04  
-**对比标签**: Workflow  
-**包含项目**: MemoryBear, deepagents  
-**研究总数**: 2
+**对比维度**: 工作流定义/执行引擎/状态管理
 
 ---
 
-## 📊 项目概览
+## 项目概览
 
-| 项目 | Stars | 许可证 | 主要语言 | 完成日期 | 完整性评分 | 一级标签 | 报告位置 |
-|------|-------|--------|---------|---------|-----------|---------|---------|
-| **MemoryBear** | - | MIT | Python | 2026-03-02 | 96.5% ⭐⭐⭐⭐⭐ | Memory, RAG, Agent, Workflow | [GitHub/MemoryBear/](../MemoryBear/) |
-| **deepagents** | 参考 GitHub | MIT | Python | 2026-03-04 | 92% ⭐⭐⭐⭐⭐ | Agent, Workflow, Code | [GitHub/deepagents/](../deepagents/) |
-
----
-
-## 🏗️ 架构对比矩阵
-
-| 维度 | MemoryBear | deepagents |
-|------|-----------|-----------|
-| **架构类型** | 事件驱动 + LangGraph | LangGraph 原生 |
-| **工作流定义** | 事件处理器 + 图 | LangGraph StateGraph |
-| **执行引擎** | LangGraph 运行时 | LangGraph 运行时 |
-| **状态管理** | Redis + Neo4j | LangGraph State + Checkpointer |
-| **可视化** | ⚠️ 基础 | ✅ LangGraph Studio |
-| **持久化** | ✅ Redis 检查点 | ✅ LangGraph Checkpointer |
+| 项目 | Stars | 核心特性 | 完整性评分 | 研究日期 | 标签 |
+|------|-------|---------|-----------|---------|------|
+| **OpenManus** | 55K | PlanningFlow 顺序执行 | 97.2/100 | 2026-03-04 | Agent, Workflow, Tool |
 
 ---
 
-## 💡 技术选型对比
+## 架构对比矩阵
 
-### 工作流引擎
+| 维度 | OpenManus |
+|------|-----------|
+| **工作流定义** | PlanningFlow + PlanningTool |
+| **执行引擎** | 异步循环（while True） |
+| **状态管理** | PlanStepStatus（4 种状态） |
+| **并行支持** | ❌ 仅顺序执行 |
+| **断点续跑** | ⚠️ 基础（通过 step_status） |
 
-| 组件 | MemoryBear | deepagents |
-|------|-----------|-----------|
-| **核心框架** | LangGraph | LangGraph |
-| **图编译** | ✅ StateGraph | ✅ StateGraph |
-| **边和节点** | ✅ 事件驱动 | ✅ 中间件驱动 |
-| **条件分支** | ✅ 支持 | ✅ 支持 |
-| **并行执行** | ✅ 支持 | ✅ 支持 |
+---
+
+## 核心维度对比 ⭐
+
+### Workflow 项目核心维度
+
+| 维度 | OpenManus | 最优 |
+|------|-----------|------|
+| **工作流定义** | PlanningTool（计划创建/更新） | - |
+| **执行引擎** | Async while 循环 | - |
+| **状态管理** | ✅ 4 种状态（not_started/in_progress/completed/blocked） | OpenManus |
+| **步骤路由** | ✅ 基于步骤类型选择 Agent | OpenManus |
+| **超时保护** | ✅ 3600 秒超时 | - |
+
+**OpenManus 得分**: **85/100** ⭐⭐⭐⭐
+
+**评分理由**:
+- ✅ 清晰的状态管理（4 种状态）
+- ✅ Agent 路由机制完善
+- ✅ 超时保护机制
+- ⚠️ 仅支持顺序执行
+- ⚠️ 缺少可视化工作流编辑器
+- ⚠️ 缺少复杂的条件分支
+
+---
+
+## OpenManus PlanningFlow 分析
+
+### 工作流定义
+
+**核心组件**: PlanningTool
+
+**功能**:
+- 计划创建/更新/删除
+- 步骤状态管理
+- 进度跟踪
+
+**数据结构**:
+```python
+plan = {
+    "plan_id": plan_id,
+    "title": title,
+    "steps": steps,  # List[str]
+    "step_statuses": ["not_started"] * len(steps),
+    "step_notes": [""] * len(steps),
+}
+```
+
+---
+
+### 执行引擎
+
+**核心流程**:
+```python
+async def execute(self, input_text: str) -> str:
+    # 1. 创建计划
+    await self._create_initial_plan(input_text)
+    
+    # 2. 循环执行
+    while True:
+        step_index, step_info = await self._get_current_step_info()
+        if step_index is None:  # 所有步骤完成
+            break
+        
+        # 3. Agent 路由
+        executor = self.get_executor(step_info.get("type"))
+        
+        # 4. 执行步骤
+        await self._execute_step(executor, step_info)
+    
+    # 5. 总结
+    return await self._finalize_plan()
+```
+
+**特性**:
+- ✅ 异步非阻塞执行
+- ✅ 状态驱动（step_status）
+- ✅ 支持提前终止（Agent.FINISHED）
+- ⚠️ 仅顺序执行，不支持并行
+
+---
 
 ### 状态管理
 
-| 组件 | MemoryBear | deepagents |
-|------|-----------|-----------|
-| **状态存储** | Redis | StateBackend / StoreBackend |
-| **检查点** | ✅ Redis | ✅ LangGraph Checkpointer |
-| **状态恢复** | ✅ 完整 | ✅ 完整 |
-| **时间旅行** | ✅ 支持 | ✅ 支持 |
-
----
-
-## 🎯 Workflow 核心维度对比 ⭐
-
-### 1. 工作流定义
-
-| 项目 | 定义方式 | DSL 支持 | 可视化 | 版本控制 | 评分 |
-|------|---------|---------|-------|---------|------|
-| **MemoryBear** | 事件处理器 + 代码 | ⚠️ 基础 | ⚠️ 基础 | ⚠️ 手动 | ⭐⭐⭐⭐ |
-| **deepagents** | LangGraph StateGraph | ⚠️ 基础 | ✅ LangGraph Studio | ⚠️ 手动 | ⭐⭐⭐⭐ |
-
-**最优**: 平局（都基于 LangGraph）
-
----
-
-### 2. 执行引擎
-
-| 项目 | 执行模式 | 并行度 | 错误处理 | 重试机制 | 评分 |
-|------|---------|-------|---------|---------|------|
-| **MemoryBear** | 事件驱动 | ✅ 支持 | ✅ 事件捕获 | ⚠️ 基础 | ⭐⭐⭐⭐ |
-| **deepagents** | LangGraph 图 | ✅ 支持 | ✅ 异常处理 | ⚠️ 基础 | ⭐⭐⭐⭐ |
-
-**最优**: 平局（LangGraph 原生能力）
-
----
-
-### 3. 状态管理
-
-| 项目 | 存储方案 | 检查点 | 恢复能力 | 时间旅行 | 评分 |
-|------|---------|-------|---------|---------|------|
-| **MemoryBear** | Redis + Neo4j | ✅ Redis | ✅ 完整 | ✅ 支持 | ⭐⭐⭐⭐⭐ |
-| **deepagents** | State/Store | ✅ Checkpointer | ✅ 完整 | ✅ 支持 | ⭐⭐⭐⭐⭐ |
-
-**最优**: MemoryBear（图数据库 + 缓存）
-
----
-
-### 4. 工作流编排
-
-| 项目 | 任务分解 | 进度跟踪 | 中断恢复 | 人工审批 | 评分 |
-|------|---------|---------|---------|---------|------|
-| **MemoryBear** | ✅ 反思引擎 | ✅ 事件日志 | ✅ 检查点 | ⚠️ 基础 | ⭐⭐⭐⭐ |
-| **deepagents** | ✅ write_todos | ✅ 内置 | ✅ Checkpointer | ✅ interrupt_on | ⭐⭐⭐⭐⭐ |
-
-**最优**: deepagents（人工审批支持更好）
-
----
-
-### 5. 可观测性
-
-| 项目 | 日志 | 追踪 | 监控 | 调试工具 | 评分 |
-|------|------|------|------|---------|------|
-| **MemoryBear** | ✅ 事件日志 | ⚠️ 基础 | ⚠️ 基础 | ⚠️ 基础 | ⭐⭐⭐ |
-| **deepagents** | ⚠️ 基础 | ⚠️ 基础 | ⚠️ 基础 | ✅ LangGraph Studio | ⭐⭐⭐⭐ |
-
-**最优**: deepagents（LangGraph Studio 可视化）
-
----
-
-## 🆚 新增项目对比
-
-### 2026-03-04: deepagents 加入对比
-
-**新项目**: deepagents (langchain-ai/deepagents)  
-**一级标签**: Agent, Workflow, Code  
-**完整性评分**: 92% ⭐⭐⭐⭐⭐
-
-**与已有项目对比**:
-
-#### vs MemoryBear
-
-| 维度 | deepagents | MemoryBear | 胜出者 |
-|------|-----------|-----------|--------|
-| **工作流定义** | LangGraph StateGraph | 事件处理器 + 图 | deepagents（更标准） |
-| **执行引擎** | LangGraph 原生 | LangGraph + 事件 | 平局 |
-| **状态管理** | State/Store + Checkpointer | Redis + Neo4j | MemoryBear（更强大） |
-| **可视化** | ✅ LangGraph Studio | ⚠️ 基础 | deepagents |
-| **人工审批** | ✅ interrupt_on | ⚠️ 基础 | deepagents |
-| **可观测性** | ✅ LangGraph Studio | ⚠️ 事件日志 | deepagents |
-
-**关键差异**:
-- deepagents 优势：LangGraph 原生、Studio 可视化、人工审批、开箱即用
-- MemoryBear 优势：Redis+Neo4j 存储、事件驱动架构、图数据库
-
-**选型建议**:
-- 选择 deepagents: 需要 LangGraph 生态、可视化调试、快速开始
-- 选择 MemoryBear: 需要强大状态存储、事件驱动、图数据库集成
-
----
-
-## 🌳 决策树
-
+**PlanStepStatus** (4 种状态):
+```python
+class PlanStepStatus(str, Enum):
+    NOT_STARTED = "not_started"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    BLOCKED = "blocked"
 ```
-需要 Workflow 框架？
-│
-├─ 需要强大状态存储？
-│  ├─ 是 → MemoryBear（Redis + Neo4j）
-│  └─ 否 → 继续
-│
-├─ 需要可视化调试？
-│  ├─ 是 → deepagents（LangGraph Studio）
-│  └─ 否 → 继续
-│
-├─ 需要人工审批？
-│  ├─ 是 → deepagents（interrupt_on 配置）
-│  └─ 否 → 继续
-│
-├─ 需要事件驱动架构？
-│  ├─ 是 → MemoryBear（事件处理器）
-│  └─ 否 → deepagents（LangGraph 原生）
+
+**状态转换**:
+```
+not_started → in_progress → completed
+                      ↓
+                   blocked
+```
+
+**状态标记**:
+```python
+status_marks = {
+    "completed": "[✓]",
+    "in_progress": "[→]",
+    "blocked": "[!]",
+    "not_started": "[ ]",
+}
 ```
 
 ---
 
-## 📝 历史更新记录
+## 新增项目对比
 
-| 日期 | 更新内容 | 包含项目数 |
-|------|---------|-----------|
-| 2026-03-04 | deepagents 加入对比 | 2 |
-| 2026-03-02 | 创建对比文件（MemoryBear） | 1 |
+### OpenManus vs 其他 Workflow 框架（待补充）
+
+**架构差异**:
+- 待研究更多 Workflow 框架后补充
+
+**技术选型差异**:
+- 待研究更多 Workflow 框架后补充
+
+**适用场景差异**:
+- 待研究更多 Workflow 框架后补充
 
 ---
 
-**最后更新**: 2026-03-04  
-**维护者**: github-researcher-plus  
-**下次更新**: 新增 Workflow 项目时自动更新
+## 决策树
+
+```mermaid
+graph TD
+  A[需求：Workflow 框架] --> B{需要什么特性？}
+  B -->|顺序执行 + Agent 协作 | C[OpenManus - PlanningFlow]
+  B -->|步骤状态跟踪 | C
+  B -->|并行执行 | D[待研究其他框架]
+  B -->|可视化编辑器 | D
+  B -->|条件分支 | D
+```
+
+**选择 OpenManus 的理由**:
+1. ✅ 清晰的步骤状态管理
+2. ✅ Agent 路由机制完善
+3. ✅ 异步非阻塞执行
+4. ✅ 超时保护
+5. ✅ 易于理解和扩展
+
+**不选择 OpenManus 的场景**:
+1. ⚠️ 需要并行执行
+2. ⚠️ 需要可视化编辑器
+3. ⚠️ 需要复杂的条件分支
+4. ⚠️ 需要工作流持久化
+
+---
+
+## 可复用设计
+
+### PlanningFlow 模板
+
+```python
+class PlanningFlow(BaseFlow):
+    async def execute(self, input_text: str) -> str:
+        await self._create_initial_plan(input_text)
+        
+        while True:
+            step_index, step_info = await self._get_current_step_info()
+            if step_index is None:
+                break
+            
+            executor = self.get_executor(step_info.get("type"))
+            await self._execute_step(executor, step_info)
+        
+        return await self._finalize_plan()
+```
+
+---
+
+## 参考资源
+
+- [OpenManus final-report.md](./github/openmanus/final-report.md)
+- [OpenManus 05-architecture-analysis.md](./github/openmanus/05-architecture-analysis.md)
+
+---
+
+**说明**: 本对比文件将随着更多 Workflow 框架的研究而不断更新。

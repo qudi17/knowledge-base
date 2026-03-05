@@ -6,6 +6,7 @@ import type {
   ScoredCoreModule
 } from "./types";
 import type { CoverageManifest } from "../coverage/types";
+import type { EvidenceRecord, EvidenceValidationResult } from "../evidence/types";
 
 export interface BuildSnapshotInput {
   selected_modules: ScoredCoreModule[];
@@ -18,6 +19,14 @@ export interface CoverageManifestSnapshot {
   phase: "06";
   generated_at: string;
   manifest: CoverageManifest;
+  snapshot_version: number;
+}
+
+export interface EvidenceSnapshotArtifact {
+  phase: "07";
+  generated_at: string;
+  records: EvidenceRecord[];
+  validation: EvidenceValidationResult;
   snapshot_version: number;
 }
 
@@ -125,6 +134,34 @@ export function parseCoverageManifestSnapshot(raw: string): CoverageManifestSnap
   }
   if (!parsed.manifest || !Array.isArray(parsed.manifest.entries)) {
     throw new Error("Invalid coverage manifest snapshot payload.");
+  }
+  return parsed;
+}
+
+export function buildEvidenceSnapshotArtifact(
+  records: EvidenceRecord[],
+  validation: EvidenceValidationResult,
+  at: string = isoNow()
+): EvidenceSnapshotArtifact {
+  return {
+    phase: "07",
+    generated_at: at,
+    records,
+    validation,
+    snapshot_version: 1
+  };
+}
+
+export function parseEvidenceSnapshotArtifact(raw: string): EvidenceSnapshotArtifact {
+  const parsed = JSON.parse(raw) as EvidenceSnapshotArtifact;
+  if (parsed.phase !== "07") {
+    throw new Error("Invalid evidence snapshot phase.");
+  }
+  if (!Array.isArray(parsed.records)) {
+    throw new Error("Invalid evidence snapshot records.");
+  }
+  if (!parsed.validation || !Array.isArray(parsed.validation.reasons)) {
+    throw new Error("Invalid evidence snapshot validation payload.");
   }
   return parsed;
 }

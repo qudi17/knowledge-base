@@ -20,6 +20,16 @@
 
 ---
 
+## ✅ 已完成研究
+
+### Agent 框架专项
+
+| # | 项目 | Stars | 标签 | GitHub 地址 | 完成日期 | 报告位置 | 完整性评分 |
+|---|------|-------|------|-----------|---------|---------|-----------|
+| 1 | **OpenManus** | 55,000+ | Agent, Workflow, Tool | [GitHub](https://github.com/FoundationAgents/OpenManus) | 2026-03-04 | [报告](./github/openmanus/final-report.md) | 97.2/100 |
+
+---
+
 ## 📝 待研究项目
 
 ### RAG 框架专项（核心）- 按 Stars 排序
