@@ -477,6 +477,64 @@ Step 5: 返回最终结果
 
 ---
 
+### 3.6 重要发现：批量优化失效 ⚠️
+
+**问题**：Pipeline 逐个 node 处理，导致 Extractor 和 Embedding 的批量优化失效！
+
+**场景**：
+```python
+# 10 个文档，每个文档 10 个 chunks
+documents = [Document(...) for _ in range(10)]
+
+pipeline = IngestionPipeline(
+    transformations=[
+        SentenceSplitter(chunk_size=512),
+        TitleExtractor(llm=llm, nodes=5),  # 期望每 5 个 nodes 调用 1 次 LLM
+        OpenAIEmbedding(),
+    ],
+)
+
+nodes = pipeline.run(documents=documents)
+```
+
+**预期**（批量优化）：
+```
+TitleExtractor(nodes=5):
+- 100 chunks / 5 = 20 次 LLM 调用
+- 成本：20 × $0.001 = $0.02
+```
+
+**实际**（逐个处理）：
+```
+TitleExtractor:
+- 100 chunks = 100 次 LLM 调用 ❌
+- 成本：100 × $0.001 = $0.10（浪费 5 倍！）
+```
+
+**原因**：
+```python
+# pipeline.py 实际执行
+for node in nodes_to_process:  # 遍历每个 node
+    transformed_nodes = self._run_transformations(node)
+    
+    # _run_transformations 内部
+    for n in nodes:
+        result = transformation([n])  # ← 每次只传入 1 个 node！
+```
+
+**影响**：
+- Extractor 批量参数（nodes=5）失效
+- Embedding 批量优化失效
+- **成本增加 5 倍**
+
+**详见**: [`ingestion-pipeline-transformation-execution.md`](./ingestion-pipeline-transformation-execution.md)
+
+**优化建议**：
+1. 短期：意识到成本问题，选择性使用 Extractor
+2. 长期：向 LlamaIndex 提交 issue 建议批量运行 transformations
+
+---
+
 ### 3.5 向量存储插入
 
 **源码**: [`pipeline.py:262-285`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py#L262-L285)
