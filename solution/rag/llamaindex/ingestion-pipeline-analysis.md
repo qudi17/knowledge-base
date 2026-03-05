@@ -1,5 +1,11 @@
 # LlamaIndex IngestionPipeline 源码深度解析
 
+> **源码版本**: LlamaIndex v0.12.x (main branch)  
+> **GitHub**: https://github.com/run-llama/llama_index  
+> **核心文件**: [`llama-index-core/llama_index/core/ingestion/pipeline.py`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py)
+
+---
+
 ## 一、IngestionPipeline 核心定位
 
 ### 1.1 设计目标
@@ -24,6 +30,8 @@
 
 ### 2.1 文件位置
 
+**源码目录**: [`llama-index-core/llama_index/core/ingestion/`](https://github.com/run-llama/llama_index/tree/main/llama-index-core/llama_index/core/ingestion)
+
 ```
 llama_index/
 └── llama-index-core/
@@ -31,7 +39,7 @@ llama_index/
         └── core/
             └── ingestion/
                 ├── __init__.py          # 导出 IngestionPipeline
-                ├── pipeline.py          # 核心实现 ⭐
+                ├── pipeline.py          # 核心实现 ⭐ [源码](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py)
                 ├── base.py              # 基础接口
                 └── utils.py             # 工具函数
 ```
@@ -76,8 +84,12 @@ llama_index/
 
 ### 3.1 IngestionPipeline 类定义
 
+**源码**: [`pipeline.py:17-85`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py#L17-L85)
+
 ```python
-# llama_index/core/ingestion/pipeline.py
+# 源码位置：llama-index-core/llama_index/core/ingestion/pipeline.py
+# https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py#L17-L85
+
 from typing import List, Optional, Dict, Any
 from llama_index.core.schema import Document, BaseNode, TransformComponent
 from llama_index.core.storage.docstore import BaseDocumentStore, SimpleDocumentStore
@@ -139,7 +151,12 @@ class IngestionPipeline:
 
 ### 3.2 run() 主方法
 
+**源码**: [`pipeline.py:87-160`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py#L87-L160)
+
 ```python
+# 源码位置：llama-index-core/llama_index/core/ingestion/pipeline.py
+# https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py#L87-L160
+
 def run(
     self,
     documents: Optional[List[Document]] = None,
@@ -213,7 +230,12 @@ def run(
 
 ### 3.3 去重机制（核心）
 
+**源码**: [`pipeline.py:162-210`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py#L162-L210)
+
 ```python
+# 源码位置：llama-index-core/llama_index/core/ingestion/pipeline.py
+# https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py#L162-L210
+
 def _filter_duplicate_nodes(
     self,
     nodes: List[BaseNode]
@@ -286,7 +308,12 @@ def _delete_old_nodes(self, doc_id: str):
 
 ### 3.4 转换链执行
 
+**源码**: [`pipeline.py:212-260`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py#L212-L260)
+
 ```python
+# 源码位置：llama-index-core/llama_index/core/ingestion/pipeline.py
+# https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py#L212-L260
+
 def _run_transformations(
     self,
     node: BaseNode
@@ -390,8 +417,12 @@ def _insert_nodes(self, nodes: List[BaseNode]):
 
 ### 4.1 基础接口
 
+**源码**: [`schema.py:TransformComponent`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/schema.py#L580-L620)
+
 ```python
-# llama_index/core/schema.py
+# 源码位置：llama-index-core/llama_index/core/schema.py
+# https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/schema.py#L580-L620
+
 from abc import abstractmethod
 from typing import List, Dict, Any
 
@@ -424,8 +455,12 @@ class TransformComponent:
 
 ### 4.2 SentenceSplitter 实现
 
+**源码**: [`node_parser/text/sentence.py`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/node_parser/text/sentence.py#L15-L120)
+
 ```python
-# llama_index/core/node_parser/text/sentence.py
+# 源码位置：llama-index-core/llama_index/core/node_parser/text/sentence.py
+# https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/node_parser/text/sentence.py#L15-L120
+
 from llama_index.core.schema import TransformComponent, BaseNode, TextNode
 
 class SentenceSplitter(TransformComponent):
@@ -482,8 +517,12 @@ class SentenceSplitter(TransformComponent):
 
 ### 4.3 Embedding 转换
 
+**源码**: [`embeddings/base.py`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/embeddings/base.py#L30-L100)
+
 ```python
-# llama_index/core/embeddings/base.py
+# 源码位置：llama-index-core/llama_index/core/embeddings/base.py
+# https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/embeddings/base.py#L30-L100
+
 from llama_index.core.schema import TransformComponent, BaseNode
 
 class BaseEmbedding(TransformComponent):
@@ -530,8 +569,12 @@ class BaseEmbedding(TransformComponent):
 
 ### 5.1 缓存策略
 
+**源码**: [`cache/base.py`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/cache/base.py#L10-L50)
+
 ```python
-# llama_index/core/cache/base.py
+# 源码位置：llama-index-core/llama_index/core/cache/base.py
+# https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/cache/base.py#L10-L50
+
 from abc import abstractmethod
 
 class BaseCache:
@@ -554,9 +597,16 @@ class BaseCache:
         pass
 ```
 
+---
+
 ### 5.2 内存缓存实现
 
+**源码**: [`cache/simple.py`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/cache/simple.py#L1-L80)
+
 ```python
+# 源码位置：llama-index-core/llama_index/core/cache/simple.py
+# https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/cache/simple.py#L1-L80
+
 class SimpleCache(BaseCache):
     """
     简单内存缓存
@@ -585,10 +635,16 @@ class SimpleCache(BaseCache):
         self.cache.clear()
 ```
 
+---
+
 ### 5.3 Redis 缓存实现
 
+**源码**: [`storage/cache/redis.py`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/storage/cache/redis.py#L1-L100)
+
 ```python
-# llama_index/storage/cache/redis.py
+# 源码位置：llama-index-core/llama_index/core/storage/cache/redis.py
+# https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/storage/cache/redis.py#L1-L100
+
 import redis
 import pickle
 
@@ -628,8 +684,12 @@ class RedisCache(BaseCache):
 
 ### 6.1 去重原理
 
+**源码**: [`storage/docstore/simple.py`](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/storage/docstore/simple.py#L1-L100)
+
 ```python
-# llama_index/storage/docstore/simple.py
+# 源码位置：llama-index-core/llama_index/core/storage/docstore/simple.py
+# https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/storage/docstore/simple.py#L1-L100
+
 class SimpleDocumentStore(BaseDocumentStore):
     """
     简单文档存储
@@ -954,7 +1014,42 @@ class DocumentPipeline:
 
 ---
 
-## 十、总结
+## 十一、源码索引
+
+### 核心文件
+
+| 文件 | GitHub 链接 | 说明 |
+|------|-----------|------|
+| `pipeline.py` | [源码](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/pipeline.py) | IngestionPipeline 主实现 |
+| `schema.py` | [源码](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/schema.py) | TransformComponent/Document/Node 定义 |
+| `base.py` (ingestion) | [源码](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/ingestion/base.py) | 基础接口 |
+
+### 转换组件
+
+| 文件 | GitHub 链接 | 说明 |
+|------|-----------|------|
+| `sentence.py` | [源码](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/node_parser/text/sentence.py) | SentenceSplitter 实现 |
+| `token.py` | [源码](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/node_parser/text/token.py) | TokenTextSplitter 实现 |
+| `semantic.py` | [源码](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/node_parser/text/semantic.py) | SemanticSplitter 实现 |
+| `base.py` (embeddings) | [源码](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/embeddings/base.py) | BaseEmbedding 实现 |
+
+### 存储层
+
+| 文件 | GitHub 链接 | 说明 |
+|------|-----------|------|
+| `simple.py` (docstore) | [源码](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/storage/docstore/simple.py) | SimpleDocumentStore 实现 |
+| `simple.py` (cache) | [源码](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/cache/simple.py) | SimpleCache 实现 |
+| `redis.py` (cache) | [源码](https://github.com/run-llama/llama_index/blob/main/llama-index-core/llama_index/core/storage/cache/redis.py) | RedisCache 实现 |
+
+### 测试文件
+
+| 文件 | GitHub 链接 | 说明 |
+|------|-----------|------|
+| `test_pipeline.py` | [源码](https://github.com/run-llama/llama_index/blob/main/llama-index-core/tests/ingestion/test_pipeline.py) | IngestionPipeline 单元测试 |
+
+---
+
+## 十二、总结
 
 ### IngestionPipeline 核心设计
 
