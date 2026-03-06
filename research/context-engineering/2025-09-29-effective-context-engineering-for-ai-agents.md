@@ -102,6 +102,47 @@
 
 ---
 
+## 原文要点摘录与中文释义（短引用对照）
+
+> 说明：为便于你不回看原文，我按“要点”做了短引用对照（每条引用尽量控制在 90 字符以内），并给出中文释义。
+
+1) 原文："Context is a critical but finite resource for AI agents."
+   - 中文释义：上下文对 AI Agent 至关重要，但它是有限资源（需要预算与取舍）。
+
+2) 原文："Context refers to the set of tokens included when sampling..."
+   - 中文释义：上下文本质是推理时喂给模型的 token 集合；工程问题是如何让这些 token 的信息密度最大化。
+
+3) 原文："Prompt engineering... Context engineering..."
+   - 中文释义：提示词工程关注“写指令”；上下文工程关注“运行时如何构造上下文”，包含工具、外部数据、历史等。
+
+4) 原文："...we need strategies for managing the entire context state..."
+   - 中文释义：长时程 agent 必须管理完整上下文状态（系统指令、工具、MCP、外部数据、历史），而不是只优化 system prompt。
+
+5) 原文："...context rot..."
+   - 中文释义：上下文过长会导致信息检索/回忆能力下降（类似“上下文腐烂/退化”），因此越长不一定越好。
+
+6) 原文："Context... must be treated as a finite resource..."
+   - 中文释义：把上下文当作注意力预算：每新增 token 都有边际成本，需要持续精炼与筛选。
+
+7) 原文："We recommend organizing prompts into distinct sections..."
+   - 中文释义：建议把 prompt 分区（背景、指令、工具指导、输出格式等），用结构化标记（XML/Markdown）提升可控性。
+
+---
+
+## 图/非文本内容（保持顺序）
+
+1) 图：Prompt engineering vs. context engineering
+   - 位置：对应“Context engineering vs. prompt engineering”章节附近
+   - alt：Prompt engineering vs. context engineering
+   - 链接：https://www.anthropic.com/_next/image?url=https%3A%2F%2Fwww-cdn.anthropic.com%2Fimages%2F4zrzovbb%2Fwebsite%2Ffaa261102e46c7f090a2402a49000ffae18c5dd6-2292x1290.png&w=3840&q=75
+
+2) 图：Calibrating the system prompt in the process of context engineering.
+   - 位置：对应“The anatomy of effective context”章节附近
+   - alt：Calibrating the system prompt in the process of context engineering.
+   - 链接：https://www.anthropic.com/_next/image?url=https%3A%2F%2Fwww-cdn.anthropic.com%2Fimages%2F4zrzovbb%2Fwebsite%2F0442fe138158e84ffce92bed1624dd09f37ac46f-2292x1288.png&w=3840&q=75
+
+---
+
 ## 参考与证据
 - 原文：https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
 
