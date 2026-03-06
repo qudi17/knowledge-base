@@ -143,6 +143,27 @@
 
 ---
 
+## 延伸检索：类似方案/思路（跨来源补充）
+
+> 目标：围绕“context engineering / 长时程 agent / 上下文检索与裁剪”等主题，补齐方案空间，让你通过这一篇文章拿到更多可选思路。
+
+1) Elastic Search Labs：Context engineering（agentic AI 的上下文管理）
+- https://www.elastic.co/search-labs/blog/context-engineering-llm-evolution-agentic-ai
+
+2) Elastic Search Labs：The impact of relevance in context engineering for AI agents（强调相关性、混合检索、agentic search 等）
+- https://www.elastic.co/search-labs/blog/context-engineering-relevance-ai-agents-elasticsearch
+
+3) Google Developers Blog：Architecting efficient context-aware multi-agent framework for production（生产级多代理与上下文压缩/过滤/缓存等）
+- https://developers.googleblog.com/architecting-efficient-context-aware-multi-agent-framework-for-production/
+
+4) arXiv：Agentic Context Engineering: Evolving Contexts for Self-Improving Language Models（把上下文当作可演化的 playbook/记忆体）
+- https://arxiv.org/abs/2510.04618
+
+5) Weaviate：Context Engineering（面向 memory/retrieval 的 agent 组织方式与工具链）
+- https://weaviate.io/blog/context-engineering
+
+---
+
 ## 参考与证据
 - 原文：https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
 
