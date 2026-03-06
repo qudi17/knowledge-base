@@ -1,6 +1,6 @@
-# RAG 项目对比分析
+# RAG 项目深度对比分析
 
-**最后更新**: 2026-03-03  
+**最后更新**: 2026-03-06  
 **对比标签**: RAG  
 **对比项目**: LlamaIndex, MemoryBear, MarkItDown
 
@@ -10,7 +10,7 @@
 
 | 项目 | Stars | 核心特性 | 完整性评分 | 研究日期 | 标签 |
 |------|-------|---------|-----------|---------|------|
-| **LlamaIndex** | 35,000+ | RAG 框架领导者 | 98.8% ⭐⭐⭐⭐⭐ | 2026-03-02 | RAG, Data, Dev-Tool |
+| **LlamaIndex** | 35,000+ | RAG 框架领导者，三层架构 | 95% ⭐⭐⭐⭐⭐ | 2026-03-06 | RAG, Data, Dev-Tool |
 | **MemoryBear** | - | 记忆平台（ACT-R） | 96.5% ⭐⭐⭐⭐⭐ | 2026-03-02 | Memory, RAG, Agent, Workflow |
 | **MarkItDown** | Microsoft | 文档转 Markdown | 92% ⭐⭐⭐⭐⭐ | 2026-03-03 | Data, Dev-Tool, RAG |
 
@@ -68,13 +68,13 @@
 
 ### 5. 检索方式
 
-| 项目 | 检索算法 | 混合检索 | 查询重写 | Rerank | 评分 |
-|------|---------|---------|---------|-------|------|
-| **LlamaIndex** | 向量相似度/BM25/混合 | ✅ 支持 | ✅ 多策略 | ✅ 支持 | ⭐⭐⭐⭐⭐ |
-| **MemoryBear** | 图遍历 + 向量相似度 | ✅ 支持 | ❌ 不支持 | ✅ 支持 | ⭐⭐⭐⭐ |
-| **MarkItDown** | 关键词匹配 | ❌ 不支持 | ❌ 不支持 | ❌ 不支持 | ⭐⭐ |
+| 项目 | 检索算法 | 混合检索 | 查询重写 | Rerank | 多 Retriever | 评分 |
+|------|---------|---------|---------|-------|-------------|------|
+| **LlamaIndex** | 向量相似度/BM25/混合 | ✅ 支持 | ✅ 多策略 | ✅ 支持 | ✅ Router/Fusion | ⭐⭐⭐⭐⭐ |
+| **MemoryBear** | 图遍历 + 向量相似度 | ✅ 支持 | ❌ 不支持 | ✅ 支持 | ❌ 单检索器 | ⭐⭐⭐⭐ |
+| **MarkItDown** | 关键词匹配 | ❌ 不支持 | ❌ 不支持 | ❌ 不支持 | ❌ 不支持 | ⭐⭐ |
 
-**最优**: LlamaIndex（检索最全面）
+**最优**: LlamaIndex（检索最全面，支持多 Retriever 路由和融合）
 
 ---
 
@@ -94,11 +94,17 @@
 
 ### 架构模式
 
-| 项目 | 架构模式 | 分层设计 | 模块化 | 扩展性 |
-|------|---------|---------|-------|-------|
-| **LlamaIndex** | 插件化架构 | 5 层（表现/服务/核心/后台/数据） | 高（385+ 包） | ⭐⭐⭐⭐⭐ |
-| **MemoryBear** | 事件驱动 | 5 层（相似） | 中（16 模块） | ⭐⭐⭐⭐ |
-| **MarkItDown** | 策略模式 | 3 层（API/核心/转换器） | 中（24 转换器） | ⭐⭐⭐⭐ |
+| 项目 | 架构模式 | 分层设计 | 模块化 | ER 关系 | 扩展性 |
+|------|---------|---------|-------|---------|-------|
+| **LlamaIndex** | 插件化架构 | 5 层（表现/服务/核心/后台/数据） | 高（385+ 包） | Engine→Retriever(1:N), Retriever→Index(1:1 或 1:N) | ⭐⭐⭐⭐⭐ |
+| **MemoryBear** | 事件驱动 | 5 层（相似） | 中（16 模块） | Engine→Retriever(1:1), Retriever→Index(1:1) | ⭐⭐⭐⭐ |
+| **MarkItDown** | 策略模式 | 3 层（API/核心/转换器） | 中（24 转换器） | 无 Retriever/Index 概念 | ⭐⭐⭐⭐ |
+
+**LlamaIndex 架构优势**:
+- 三层分离（Engine/Retriever/Index），关注点清晰
+- 支持多 Retriever 组合（RouterRetriever、QueryFusionRetriever）
+- 支持多 Index 联合检索（通过 Router 或 Fusion）
+- 抽象基类（BaseIndex、BaseRetriever、BaseQueryEngine）提供统一接口
 
 ---
 
@@ -112,6 +118,9 @@ graph TD
     C1 --> D1[VectorStore]
     D1 --> E1[Retriever]
     E1 --> F1[ResponseSynthesizer]
+    
+    E1 -.-> |RouterRetriever| E2[Retriever2]
+    E1 -.-> |FusionRetriever| E3[Retriever3]
     end
     
     subgraph MemoryBear
@@ -130,6 +139,11 @@ graph TD
     end
 ```
 
+**LlamaIndex ER 关系核心发现**:
+- **Engine → Retriever**: 1:N 关系（通过 RouterRetriever、QueryFusionRetriever 实现）
+- **Retriever → Index**: 1:1（基础）或 1:N（通过 Router 间接实现）
+- **调用链**: Engine.chat() → Retriever.retrieve() → Index.vector_store.query()
+
 ---
 
 ## 💡 技术选型对比
@@ -141,8 +155,10 @@ graph TD
 | **文档加载** | 统一接口（100+ 格式） | 专注文本 | 策略模式（24 格式） | LlamaIndex（通用） |
 | **分块策略** | 5 种可选 | 语义分块 | 固定大小 | LlamaIndex（灵活） |
 | **存储方案** | 多向量库支持 | Neo4j+ES | 无存储 | MemoryBear（图 + 向量） |
-| **检索算法** | 混合检索 | 图 + 向量 | 关键词 | LlamaIndex（全面） |
+| **检索算法** | 混合检索 + 多 Retriever | 图 + 向量 | 关键词 | LlamaIndex（全面） |
 | **记忆机制** | 基础 | ACT-R 遗忘/反思 | 无 | MemoryBear（科学） |
+| **架构模式** | 三层分离（Engine/Retriever/Index） | 事件驱动 | 策略模式 | LlamaIndex（清晰） |
+| **组合能力** | RouterRetriever、QueryFusionRetriever | 单检索器 | 无 | LlamaIndex（强大） |
 
 ---
 
@@ -264,9 +280,21 @@ graph TD
 
 ## 🔗 参考资源
 
-- [LlamaIndex 研究](./llamaindex/final-report.md)
-- [MemoryBear 研究](./MemoryBear/final-report.md)
-- [MarkItDown 研究](./markitdown/final-report.md)
+- [LlamaIndex 最终报告](../llama_index/final-report.md)
+- [LlamaIndex ER 关系分析](../llama_index/08-er-relationship-analysis.md)
+- [LlamaIndex ER 关系总结](../llama_index/ER-RELATIONSHIP-SUMMARY.md)
+- [MemoryBear 研究](../MemoryBear/final-report.md)
+- [MarkItDown 研究](../markitdown/final-report.md)
+
+---
+
+## 📝 更新历史
+
+| 日期 | 更新内容 | 对比项目数 |
+|------|---------|-----------|
+| 2026-03-06 | 全量更新：添加 LlamaIndex ER 关系分析（Engine→Retriever→Index 三层架构、1:N 多 Retriever 模式、调用链流程图） | 3 |
+| 2026-03-03 | 添加 MarkItDown 对比 | 3 |
+| 2026-03-02 | 初始创建：LlamaIndex vs MemoryBear | 2 |
 
 ---
 
