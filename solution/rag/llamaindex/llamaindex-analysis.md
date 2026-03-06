@@ -351,21 +351,24 @@ documents = await parser.aload_data("complex_document.pdf")
 
 ---
 
-## 七、与我们的方案对比
+## 七、与典型自研 RAG 参考实现对比（示例）
+
+> 说明：此前知识库中曾有“项目定制自研方案”文档作为对比基准；该文档已被你删除。
+> 为避免对不存在文档的依赖，本节改为“典型企业自研 RAG 参考实现”的**示例性**对比，用于帮助理解取舍，而非描述某个现存实现。
 
 ### 7.1 架构对比
 
-| 维度 | LlamaIndex | 我们的方案 |
-|------|-----------|-----------|
-| **定位** | RAG 框架（通用） | 企业级 RAG 系统（定制） |
-| **文档处理** | Ingestion Pipeline | 自研管道 |
-| **分块策略** | 多种内置（句子/token/语义） | 智能分块（中文优化） |
-| **去重机制** | 内置（docstore） | 自研（Redis+hash） |
-| **向量存储** | 支持 30+ 向量库 | PostgreSQL + pgvector |
-| **检索策略** | 多种检索器 | 混合检索（向量+ES） |
-| **溯源** | 基础（ref_doc_id） | Neo4j 图谱（多跳引用） |
-| **外部集成** | 100+ 连接器 | 定制（Confluence/SharePoint） |
-| **License** | MIT | 自研（MIT/Apache） |
+| 维度 | LlamaIndex | 典型自研 RAG（参考实现） |
+|------|-----------|------------------------|
+| **定位** | RAG 框架（通用） | 企业级 RAG 系统（按需求定制） |
+| **文档处理** | Ingestion Pipeline | 自研管道（可复用现有基础设施） |
+| **分块策略** | 多种内置（句子/token/语义） | 业务自定义（可针对中文/领域优化） |
+| **去重机制** | 内置（docstore） | 自研（常见：Redis + hash） |
+| **向量存储** | 支持 30+ 向量库 | 常见：PostgreSQL + pgvector 或专用向量库 |
+| **检索策略** | 多种检索器 | 常见：混合检索（向量 + BM25/ES） |
+| **溯源** | 基础（ref_doc_id） | 常见：结构化引用/图谱（按需求选择） |
+| **外部集成** | 100+ 连接器 | 常见：Confluence/SharePoint/网盘等按需定制 |
+| **License** | MIT | 自研（按内部合规与依赖许可证而定） |
 
 ---
 
@@ -379,14 +382,14 @@ documents = await parser.aload_data("complex_document.pdf")
 4. **高级功能** - 递归检索/自动合并/多模态
 5. **LlamaParse** - 商业解析服务（省心）
 
-#### 我们的方案优势
+#### 典型自研 RAG（参考实现）优势
 
-1. **基础设施复用** - 基于现有 PostgreSQL/ES/Neo4j/Redis
-2. **中文优化** - 分块/检索针对中文场景调优
-3. **溯源能力** - Neo4j 图谱支持多跳引用追踪
-4. **企业集成** - 深度定制 Confluence/SharePoint
-5. **成本控制** - 无商业服务依赖，自建可控
-6. **扩展性** - 针对百万级文档优化（pgvector HNSW）
+1. **基础设施复用** - 可基于现有 PostgreSQL/ES/Redis 等组件落地
+2. **中文/领域优化** - 分块、召回、重排可针对业务语料调优
+3. **可控的溯源能力** - 可按需求选择“结构化引用 / 图谱”等实现
+4. **企业集成** - 可深度定制 Confluence/SharePoint/权限体系
+5. **成本可控** - 避免强依赖商业闭源服务（取决于选型）
+6. **扩展性可设计** - 可按数据规模/延迟目标做工程化优化
 
 ---
 
@@ -400,11 +403,11 @@ documents = await parser.aload_data("complex_document.pdf")
 4. **商业依赖** - LlamaParse 收费（大规模成本高）
 5. **学习曲线** - 概念多（Node/Index/Retriever/QueryEngine）
 
-#### 我们的方案劣势
+#### 典型自研 RAG（参考实现）劣势
 
-1. **开发成本** - 需要自研管道（2-3 人月）
-2. **生态缺失** - 无社区支持，需自行维护
-3. **功能单一** - 专注 RAG，无 Agent/Workflow 能力
+1. **开发与维护成本** - 需要持续投入人力做工程化与运维
+2. **生态与复用不足** - 连接器/工具链需要自建或引入第三方
+3. **能力边界取决于投入** - Agent/Workflow/多模态等能力往往需要额外建设
 
 ---
 
@@ -415,7 +418,7 @@ documents = await parser.aload_data("complex_document.pdf")
 #### （1）Transformation 链模式
 
 ```python
-# 我们的方案可以借鉴
+# 自研管道可借鉴的接口形态（示例）
 class Transformation:
     async def __call__(self, chunks: List[Chunk]) -> List[Chunk]:
         pass

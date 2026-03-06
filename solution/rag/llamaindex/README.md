@@ -9,7 +9,7 @@
 ### 1. [LlamaIndex 架构分析与对比](./llamaindex-analysis.md)
 **内容**：
 - LlamaIndex 核心架构（Ingestion Pipeline/Indexes/Retrievers）
-- 与我们方案的优劣势对比
+- 与典型自研方案（参考实现）的优劣势对比（示例）
 - 借鉴建议（Transformation 链/Node 抽象/去重机制）
 
 **核心结论**：
