@@ -147,20 +147,50 @@
 
 > 目标：围绕“context engineering / 长时程 agent / 上下文检索与裁剪”等主题，补齐方案空间，让你通过这一篇文章拿到更多可选思路。
 
-1) Elastic Search Labs：Context engineering（agentic AI 的上下文管理）
-- https://www.elastic.co/search-labs/blog/context-engineering-llm-evolution-agentic-ai
+### 1) Elastic Search Labs：You Know, for Context - Part II（Agentic AI 与 context engineering）
+- URL：https://www.elastic.co/search-labs/blog/context-engineering-llm-evolution-agentic-ai
+- 总结：把“上下文工程”放进检索/搜索系统演进的大背景下，强调 agent 与数据交互方式变化带来的上下文管理需求。
+- 与主文区别：
+  - 主文（Anthropic）更像“Agent 上下文心智模型/原则”；Elastic 更像“检索系统视角下的上下文工程”，会更靠近搜索、数据交互与检索相关概念。
+- 优劣势（相对主文）：
+  - 优势：更容易把 context engineering 具体落到“检索/搜索/数据访问”的工程系统里。
+  - 劣势：对 Agent loop 内部的提示词结构/上下文组成拆解，可能不如 Anthropic 那么聚焦。
 
-2) Elastic Search Labs：The impact of relevance in context engineering for AI agents（强调相关性、混合检索、agentic search 等）
-- https://www.elastic.co/search-labs/blog/context-engineering-relevance-ai-agents-elasticsearch
+### 2) Elastic Search Labs：The impact of relevance in context engineering for AI agents
+- URL：https://www.elastic.co/search-labs/blog/context-engineering-relevance-ai-agents-elasticsearch
+- 总结：把“相关性（relevance）”作为上下文工程的核心，强调通过检索质量（混合检索/分块/agentic search）来提升上下文的信噪比。
+- 与主文区别：
+  - 主文强调“上下文是预算、需要精选”；本篇把“精选”的关键落点具体化为“相关性工程/检索工程”。
+- 优劣势（相对主文）：
+  - 优势：更接近可执行的工程抓手（检索、分块、混合搜索、相关性调优）。
+  - 劣势：如果你的系统问题主要在 tool use/流程编排，而不是检索相关性，本篇覆盖面会偏窄。
 
-3) Google Developers Blog：Architecting efficient context-aware multi-agent framework for production（生产级多代理与上下文压缩/过滤/缓存等）
-- https://developers.googleblog.com/architecting-efficient-context-aware-multi-agent-framework-for-production/
+### 3) Google Developers Blog：Architecting efficient context-aware multi-agent framework for production
+- URL：https://developers.googleblog.com/architecting-efficient-context-aware-multi-agent-framework-for-production/
+- 总结：面向生产落地的多代理框架设计，强调上下文压缩/过滤/缓存等工程化手段，把“上下文管理”模块化、可配置化。
+- 与主文区别：
+  - 主文偏原则与心智模型；Google 更偏“生产框架与工程机制”（例如 compaction/filtering/caching 的生命周期管理）。
+- 优劣势（相对主文）：
+  - 优势：更直接给出工程系统的组织方式（把上下文管理当成独立模块/可调策略）。
+  - 劣势：具体实现可能与其生态/框架绑定，迁移到你的栈需要重新映射。
 
-4) arXiv：Agentic Context Engineering: Evolving Contexts for Self-Improving Language Models（把上下文当作可演化的 playbook/记忆体）
-- https://arxiv.org/abs/2510.04618
+### 4) arXiv：Agentic Context Engineering（ACE）
+- URL：https://arxiv.org/abs/2510.04618
+- 总结：把上下文当作可演化的 playbook/记忆体，通过“生成-反思-整理”的模块化过程进行增量更新，试图避免迭代摘要导致的信息坍塌。
+- 与主文区别：
+  - 主文关注“每轮上下文如何精选”；ACE 更关注“长期知识如何在上下文中持续生长且不丢细节”。
+- 优劣势（相对主文）：
+  - 优势：提供了对“长期演化记忆/知识沉淀”的更系统的研究框架（适合长周期 agent）。
+  - 劣势：论文方案通常需要额外实现/评测验证，落地成本与不确定性更高。
 
-5) Weaviate：Context Engineering（面向 memory/retrieval 的 agent 组织方式与工具链）
-- https://weaviate.io/blog/context-engineering
+### 5) Weaviate：Context Engineering - LLM Memory and Retrieval for AI Agents
+- URL：https://weaviate.io/blog/context-engineering
+- 总结：从“记忆/检索”角度讲上下文工程，把很多现实问题落到私有知识访问、向量库/混合检索与 agent 工具编排。
+- 与主文区别：
+  - 主文更偏 Anthropic 的 agent 构建心智模型；Weaviate 更偏“如何用 retrieval/memory 工具链解决真实场景的上下文缺失”。
+- 优劣势（相对主文）：
+  - 优势：更贴近 RAG/向量数据库落地；对你做“LLM 方案技巧”会更具体。
+  - 劣势：内容可能更产品/生态导向，需要警惕把某一 vendor 的最佳实践当成通用真理。
 
 ---
 
