@@ -40,7 +40,7 @@
 |---|------|-------|------|-----------|-------|------|---------|
 | 1 | **Dify** | 50,000+ | RAG 应用平台 | [GitHub](https://github.com/langgenius/dify) | ⭐⭐⭐⭐⭐ | 📝 | 待开始 |
 | 2 | **PrivateGPT** | 40,000+ | RAG 应用 | [GitHub](https://github.com/imartinez/privateGPT) | ⭐⭐⭐⭐⭐ | 📝 | 待开始 |
-| 3 | **LlamaIndex** | 35,000+ | RAG 框架 | [GitHub](https://github.com/run-llama/llama_index) | ⭐⭐⭐⭐⭐ | ✅ | 已完成 |
+| 3 | 3 | **LlamaIndex** | 35,000+ | RAG 框架 | [GitHub](https://github.com/run-llama/llama_index) | ⭐⭐⭐⭐⭐ | ✅ | 已完成 |
 | 4 | **AnythingLLM** | 35,000+ | RAG 桌面应用 | [GitHub](https://github.com/Mintplex-Labs/anything-llm) | ⭐⭐⭐⭐ | 📝 | 待开始 |
 | 5 | **Haystack** | 15,000+ | RAG 框架 | [GitHub](https://github.com/deepset-ai/haystack) | ⭐⭐⭐⭐⭐ | 📝 | 待开始 |
 | 6 | **ChatDOC** | 15,000+ | 文档 RAG | [GitHub](https://github.com/ChatDOC/ChatDOC) | ⭐⭐⭐ | 📝 | 待开始 |
@@ -88,10 +88,11 @@
 
 | 项目 | Stars | 类型 | GitHub 地址 | 完成日期 | 报告位置 | 完整性评分 | 标签（一级） |
 |------|-------|------|-----------|---------|---------|------------|-------------|
+| **OpenEvolve** | 算法项目 | 进化代码优化 | [GitHub](https://github.com/algorithmicsuperintelligence/openevolve) | 2026-03-06 | [GitHub/openevolve/](./GitHub/openevolve/) | 94% ⭐⭐⭐⭐⭐ | Code, Agent, Tool |
 | **MarkItDown** | Microsoft | 文档转换 | [GitHub](https://github.com/microsoft/markitdown) | 2026-03-03 | [GitHub/markitdown/](./GitHub/markitdown/) | 92% ⭐⭐⭐⭐⭐ | Data, Dev-Tool, RAG |
 | **nanobot** | 23,839 | Agent 框架 | [GitHub](https://github.com/HKUDS/nanobot) | 2026-03-02 | [GitHub/nanobot/](./GitHub/nanobot/) | 98.75% ⭐⭐⭐⭐⭐ | Agent, Dev-Tool, Code |
 | **MemoryBear** | - | 记忆平台 | [GitHub](https://github.com/qudi17/MemoryBear) | 2026-03-02 | [GitHub/MemoryBear/](./GitHub/MemoryBear/) | 96.5% ⭐⭐⭐⭐⭐ | Memory, RAG, Agent, Workflow |
-| **LlamaIndex** | 35,000+ | RAG 框架 | [GitHub](https://github.com/run-llama/llama_index) | 2026-03-02 | [GitHub/llamaindex/](./GitHub/llamaindex/) | 98.8% ⭐⭐⭐⭐⭐ | RAG, Data, Dev-Tool |
+| **LlamaIndex** | 35,000+ | RAG 框架 | [GitHub](https://github.com/run-llama/llama_index) | 2026-03-06 | [GitHub/llama_index/](./GitHub/llama_index/) | 95% ⭐⭐⭐⭐⭐ | RAG, Data, Dev-Tool |
 | **everything-claude-code** | - | Agent 技能框架 | [GitHub](https://github.com/affaan-m/everything-claude-code) | 2026-03-02 | [GitHub/everything-claude-code/](./GitHub/everything-claude-code/) | 98% ⭐⭐⭐⭐⭐ | Agent, Code, Dev-Tool |
 | **RuView** | - | WiFi 感知 | [GitHub](https://github.com/ruvnet/RuView) | 2026-03-03 | [GitHub/ruview/](./GitHub/ruview/) | 99.6% ⭐⭐⭐⭐⭐ | Data, Search |
 | **Claude Agent SDK** | - | Agent SDK | [GitHub](https://github.com/anthropics/claude-agent-sdk-python) | 2026-03-03 | [GitHub/claude-agent-sdk-python/](./GitHub/claude-agent-sdk-python/) | 98.7% ⭐⭐⭐⭐⭐ | Agent, SDK, Dev-Tool |
@@ -124,9 +125,9 @@
 |------|------|
 | **待研究** | 27 个（含 8 个 RAG 框架） |
 | **研究中** | 0 个 |
-| **已完成** | 15 个 (7 GitHub 项目 + 8 理论) |
+| **已完成** | 16 个 (8 GitHub 项目 + 8 理论) |
 | **已暂停** | 0 个 |
-| **总计** | 21 个 |
+| **总计** | 22 个 |
 
 **优先级分布**:
 - ⭐⭐⭐ 高优先级：6 个
@@ -163,10 +164,11 @@
 
 | 日期 | 更新内容 | 操作 |
 |------|---------|------|
+| 2026-03-06 | 完成 OpenEvolve 深度研究 | 1 篇主报告，完整性评分 94%，Level 5 深度，14 阶段完整执行（入口点普查/模块化分析/调用链追踪/架构分析/代码覆盖率/设计模式识别），5 层架构分析，6 种设计模式识别，MAP-Elites 算法/多进程并行/LLM 集成深度分析，更新 Code-comparison.md/Agent-comparison.md/Tool-comparison.md |
 | 2026-03-04 | 完成 deepagents 深度研究 | 11 篇研究报告，完整性评分 92%，Level 5 深度，14 阶段完整执行（入口点普查/模块化分析/架构分析/设计模式识别），5 层架构分析，6 种设计模式识别，Middleware 模式/Protocol 后端/子代理系统深度分析，全量更新 Agent-comparison.md 和 Workflow-comparison.md |
 | 2026-03-03 | 完成 MarkItDown 深度研究 | 8 篇研究报告，完整性评分 92%，Level 5 深度，核心 14 阶段执行，5 层架构分析，8 种设计模式识别，PDF 表格提取/Magika 智能识别/优先级调度机制深度分析 |
 | 2026-03-02 | 完成 MemoryBear 深度研究 | 11 篇研究报告，完整性评分 96.5%，Level 5 深度，14 阶段完整执行，5 层架构分析，12 种设计模式识别，ACT-R 遗忘引擎/GraphRAG 双引擎/LangGraph 工作流深度分析 |
-| 2026-03-02 | 完成 LlamaIndex 深度研究 | 11 篇研究报告，完整性评分 98.8%，14 阶段完整执行，5 层架构分析，8 种设计模式识别 |
+| 2026-03-06 | 完成 LlamaIndex 深度研究（ER 关系专项） | 3 篇核心报告（ER 关系分析/ER 总结/最终报告），完整性评分 95%，重点分析 Engine→Retriever→Index 的 ER 关系，发现 1:N 多 Retriever 模式和 1:1 基础模式，生成 Mermaid ER 图、调用链流程图、4 个代码示例，更新 RAG-comparison.md/Dev-Tool-comparison.md |
 | 2026-03-02 | 完成 nanobot 深度研究 | 11 篇研究报告，完整性评分 98.75%，入口点普查/模块化分析/调用链追踪/知识链路/架构分析/代码覆盖率/设计模式识别 |
 | 2026-03-02 | 完成 MemoryBear v2.1 深度研究 | 15 篇研究报告，完整性评分 94%，新增 ACT-R 遗忘引擎/反思引擎/Neo4j 存储/混合搜索深度分析 |
 | 2026-03-01 | 启动 LlamaIndex 深度研究 | RAG 框架研究 #3（35K⭐，RAG 领导者） |
