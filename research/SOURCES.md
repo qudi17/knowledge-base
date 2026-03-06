@@ -10,25 +10,15 @@
 
 ## Sources
 
-| 站点 | 类型 | 入口（Homepage） | AI 权重 | 备注 |
-|---|---|---|---|---|
-| Anthropic Engineering | 公司工程博客 | https://www.anthropic.com/engineering | high | 你点名的例子 |
-| OpenAI Research / Engineering | 公司研究/工程 | https://openai.com/research | high | 研究为主（工程细节相对少） |
-| DeepMind Blog | 公司研究 | https://deepmind.google/discover/blog/ | high | 研究/产品更新 |
-| Google AI Blog | 公司研究 | https://ai.googleblog.com/ | high | 历史文章多（可能有迁移/归档） |
-| Apple Machine Learning Research | 研究 | https://machinelearning.apple.com/ | high | ML 为主 |
-| Databricks Blog | 数据/AI | https://www.databricks.com/blog | high | 数据平台/LLM/工程 |
-| GitHub Engineering | 工程实践 | https://github.blog/engineering/ | medium | 平台、Copilot、开发者体验 |
-| Meta Engineering | 工程实践 | https://engineering.fb.com/ | medium | 大规模系统/AI/性能 |
-| Netflix TechBlog | 工程实践 | https://netflixtechblog.com/ | medium | 分布式/平台/数据/推荐 |
-| Uber Engineering | 工程实践 | https://www.uber.com/en-US/blog/engineering/ | medium | 平台/数据/AI/基础设施 |
-| Cloudflare Blog | 网络/安全/工程 | https://blog.cloudflare.com/ | low | 网络、边缘、性能、安全 |
-| Stripe Engineering | 工程实践 | https://stripe.com/blog/engineering | low | 支付/可靠性/开发体验 |
-| Microsoft Engineering Blog | 工程实践 | https://engineering.microsoft.com/ | low | 工程广谱 |
-| Google Cloud Blog | 云/架构 | https://cloud.google.com/blog | low | 云架构/工程实践 |
-| AWS Blog | 云/架构 | https://aws.amazon.com/blogs/ | low | 分类多，适合按领域抓取 |
-| Snowflake Blog | 数据平台 | https://www.snowflake.com/blog/ | low | 数据/平台/产品 |
-| ByteDance（待定） | 工程实践 | https://bytedance.feishu.cn/ | low | 如需中文/国内案例，可后续补充更精确入口 |
+| 站点 | 类型 | 入口（Homepage） | AI 权重 | 抓取方式（测试结论） | 提取规则（建议） | 备注 |
+|---|---|---|---|---|---|---|
+| Anthropic Engineering | 公司工程博客 | https://www.anthropic.com/engineering | high | ✅ 可抓（browser） | 从 `main a` 中筛选 `/engineering/` 文章链接；去重 | 你点名的例子 |
+| Google AI Blog | 公司研究 | https://research.google/blog/label/generative-ai/ | medium | ⚠️ 未测（待测） | 预计：从列表页 `a[href*="/blog/"]` 或卡片链接提取；必要时分页 | 历史文章多（可能有迁移/归档） |
+| GitHub Engineering | 工程实践 | https://github.blog/ai-and-ml/ | high | ✅ 可抓（browser） | 从 `article a[href]` 中取文章链接；过滤作者页（`/author/`）等非文章链接 | GitHub engineers and industry thought |
+| 稀土掘金 AI | 开发者社区 | https://juejin.cn/ai | high | ✅ 可抓（browser） | 提取 `a[href*="/post/"]`；去重；可按“最新/推荐”切换（如需要） | 实战多、LLM/Agent/RAG 工程化，一线开发者分享多 |
+| InfoQ AI | 架构/技术深度 | https://www.infoq.cn/topic/AI&LLM | low | ✅ 可抓（browser） | 提取 `a[href*="/article/"]` 与 `a[href*="/news/"]`；去重 | 偏架构、大模型工程化、落地案例，专家撰稿为主 |
+| 字节跳动技术博客 | 大厂工程博客 | https://opensource.bytedance.com/blog | high | ✅ 可抓（browser，需点击卡片） | 列表页可能无 `a[href]`；需模拟点击卡片进入 `blogDetail/<id>`；或解析页面脚本数据（后续优化） | 大模型（豆包）、推荐系统、NLP、工程实践一手内容 |
+| Thoughtworks AI Insights | AI洞见 | https://www.thoughtworks.com/zh-cn/insights/blog?f-topic=AI%20and%20ML | medium | ⚠️ 未测（待测） | 预计：提取列表卡片 `a[href]`；注意可能需要滚动/分页加载 | Thoughtworks AI Insights |
 
 ---
 
