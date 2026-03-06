@@ -17,7 +17,16 @@
 
 ---
 
+## Research（Blogs / Articles）
+
+| 领域 | 标题 | 来源 | 日期 | 文件 |
+|---|---|---|---|---|
+| - | - | - | - | - |
+
+---
+
 ## 说明
 - “领域”：按问题域/能力域划分（例如 RAG）。
 - “Project”：在该领域下的一个研究对象/方案族（例如 LlamaIndex）。
-- “状态”：用于快速掌握研究进展（active/paused/done 等）。
+- “状态”：用于快速掌握研究进展（active/paused/done）。
+- Blog/Article 研究报告落盘路径：`research/<domain>/<blog-name>.md`，并在本页 Research 表格中登记。
