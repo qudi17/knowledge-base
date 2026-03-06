@@ -15,6 +15,7 @@
 | RAG | RAG Methodology | active | 2026-03-06 | [solution/rag/README.md](./solution/rag/README.md) |
 | RAG | LlamaIndex | active | 2026-03-05 | [solution/rag/llamaindex/README.md](./solution/rag/llamaindex/README.md) |
 | RAG | Evaluation | active | 2026-03-06 | [solution/rag/evaluation/README.md](./solution/rag/evaluation/README.md) |
+| Research | Blog Methodology | active | 2026-03-06 | [research/README.md](./research/README.md) |
 
 ---
 
