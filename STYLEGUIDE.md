@@ -6,6 +6,18 @@
 
 ---
 
+## 0. 必读文件（启动时检查）
+
+为保证跨 session 行为一致，每次开始知识库相关工作前，先检查/遵循以下文件：
+
+1. `workspace-github-researcher/MEMORY.md`（你的边界与偏好）
+2. `knowledge-base/README.md`（全库索引：Projects + Research 表格）
+3. `knowledge-base/STYLEGUIDE.md`（本文件：写作/归档/引用规范）
+4. `knowledge-base/research/README.md`（博客研究方法与报告模板）
+5. `knowledge-base/solution/rag/README.md`（RAG 领域方法论；仅方法论，不维护项目索引）
+
+---
+
 ## 1. 目录组织
 
 ### 1.1 领域（solution）研究
