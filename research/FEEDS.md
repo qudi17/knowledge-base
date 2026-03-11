@@ -15,6 +15,7 @@
 |---|---|---|---|---|---|
 | Effective context engineering for AI agents | Anthropic Engineering | 2025-09-29 | 2026-03-06 | https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents | research/context-engineering/2025-09-29-effective-context-engineering-for-ai-agents.md |
 | We removed 80% of our agent’s tools | Vercel Blog | 2025-12-22 | 2026-03-11 | https://vercel.com/blog/we-removed-80-percent-of-our-agents-tools | research/text-to-sql/2025-12-22-we-removed-80-percent-of-our-agents-tools.md |
+| OSS Data Analyst：semantic layer 设计拆解与最小可复现架构 | GitHub / Vercel Labs | 2026-03-11 | 2026-03-11 | https://github.com/vercel-labs/oss-data-analyst | research/text-to-sql/2026-03-11-oss-data-analyst-semantic-layer-and-minimal-architecture.md |
 
 ---
 
