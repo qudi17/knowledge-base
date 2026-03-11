@@ -18,6 +18,7 @@
 - [内部汇报版 v1](./internal-brief-v1.md)
 - [Benchmark 数据格式模板（v1）](./benchmark-schema-v1.md)
 - [text-to-SQL / Data Analyst Agent 横向方案地图](./landscape.md)
+- [semantic layer 横向对比：Cube vs dbt Semantic Layer / MetricFlow vs LookML vs lightweight YAML](./semantic-layer-comparison.md)
 
 ---
 
