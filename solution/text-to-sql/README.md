@@ -15,6 +15,8 @@
 
 ### 研究 / 方法论
 - [真实业务 text-to-SQL agent 测试标准（v1）](./real-world-evaluation-standard-v1.md)
+- [内部汇报版 v1](./internal-brief-v1.md)
+- [Benchmark 数据格式模板（v1）](./benchmark-schema-v1.md)
 
 ---
 
