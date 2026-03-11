@@ -24,6 +24,7 @@
 | 领域 | 标题 | 来源 | 文章发布日期 | 报告生成日期 | 文件 |
 |---|---|---|---|---|---|
 | context-engineering | Effective context engineering for AI agents | Anthropic Engineering | 2025-09-29 | 2026-03-06 | [research/context-engineering/2025-09-29-effective-context-engineering-for-ai-agents.md](./research/context-engineering/2025-09-29-effective-context-engineering-for-ai-agents.md) |
+| text-to-sql | We removed 80% of our agent’s tools | Vercel Blog | 2025-12-22 | 2026-03-11 | [research/text-to-sql/2025-12-22-we-removed-80-percent-of-our-agents-tools.md](./research/text-to-sql/2025-12-22-we-removed-80-percent-of-our-agents-tools.md) |
 
 ---
 
