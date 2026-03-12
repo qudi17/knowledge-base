@@ -17,6 +17,8 @@
 - [真实业务 text-to-SQL agent 测试标准（v1）](./real-world-evaluation-standard-v1.md)
 - [内部汇报版 v1](./internal-brief-v1.md)
 - [Benchmark 数据格式模板（v1）](./benchmark-schema-v1.md)
+- [面向产品的 Text-to-SQL 测试框架（v2）](./product-test-framework-v2.md)
+- [产品测试框架最小 Python Skeleton](./product-test-framework-skeleton/README.md)
 - [text-to-SQL / Data Analyst Agent 横向方案地图](./landscape.md)
 - [semantic layer 横向对比：Cube vs dbt Semantic Layer / MetricFlow vs LookML vs lightweight YAML](./semantic-layer-comparison.md)
 

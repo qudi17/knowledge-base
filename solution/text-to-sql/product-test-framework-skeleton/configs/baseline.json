@@ -1,0 +1,6 @@
+{
+  "success_rate": 0.66,
+  "sql_exec_rate": 1.0,
+  "result_match_rate": 0.33,
+  "behavior_pass_rate": 1.0
+}

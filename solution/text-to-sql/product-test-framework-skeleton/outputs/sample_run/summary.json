@@ -1,0 +1,10 @@
+{
+  "case_count": 3,
+  "success_rate": 1.0,
+  "sql_exec_rate": 1.0,
+  "result_match_rate": 1.0,
+  "behavior_pass_rate": 1.0,
+  "p50_latency_ms": 10,
+  "p95_latency_ms": 10,
+  "failure_count_by_type": {}
+}
