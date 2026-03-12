@@ -17,6 +17,7 @@
 - [最小可用 Agent 架构（v1）](./minimal-agent-architecture-v1.md)
 - [Agent 可观测性与评测框架（v1）](./agent-observability-and-evaluation-v1.md)
 - [Agent 可观测性与评测框架：行业实践综述（v1）](./industry-survey-agent-observability-and-evaluation.md)
+- [OpenAI Evals 分析（v1）](./openai-evals-analysis-v1.md)
 
 ---
 
