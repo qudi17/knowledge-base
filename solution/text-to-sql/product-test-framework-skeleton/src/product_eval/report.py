@@ -12,6 +12,8 @@ def build_summary(records: list[RunRecord]) -> dict:
     stage_failures = Counter(r.judgement.primary_failure_stage for r in records if r.judgement.primary_failure_stage)
     type_failures = Counter(r.judgement.primary_failure_type for r in records if r.judgement.primary_failure_type)
     latencies = sorted(r.latency_ms for r in records)
+    consistency_values = [r.generation.final_answer_consistency for r in records if r.generation.final_answer_consistency is not None]
+    consistency_rate = round(sum(1 for x in consistency_values if x) / len(consistency_values), 4) if consistency_values else None
     return {
         "case_count": len(records),
         "success_rate": round(sum(1 for r in records if r.judgement.primary_failure_stage is None) / total, 4),
@@ -19,6 +21,7 @@ def build_summary(records: list[RunRecord]) -> dict:
         "generation_pass_rate": round(sum(1 for r in records if r.generation.uses_retrieved_context_correctly is not False) / total, 4),
         "sql_exec_rate": round(sum(1 for r in records if r.execution.sql_executable) / total, 4),
         "result_match_rate": round(sum(1 for r in records if r.execution.result_match) / total, 4),
+        "final_answer_consistency_rate": consistency_rate,
         "p50_latency_ms": latencies[len(latencies) // 2] if latencies else 0,
         "p95_latency_ms": latencies[min(len(latencies) - 1, int(len(latencies) * 0.95))] if latencies else 0,
         "failure_by_stage": dict(stage_failures),
@@ -44,6 +47,7 @@ def build_report(summary: dict, baseline: dict | None) -> str:
         f"- generation_pass_rate: {summary['generation_pass_rate']}",
         f"- sql_exec_rate: {summary['sql_exec_rate']}",
         f"- result_match_rate: {summary['result_match_rate']}",
+        f"- final_answer_consistency_rate: {summary['final_answer_consistency_rate']}",
         f"- p50_latency_ms: {summary['p50_latency_ms']}",
         f"- p95_latency_ms: {summary['p95_latency_ms']}",
         "",
@@ -65,7 +69,7 @@ def build_report(summary: dict, baseline: dict | None) -> str:
     lines.append("")
     lines.append("## Baseline Diff")
     if baseline:
-        for key in ["success_rate", "retrieval_pass_rate", "generation_pass_rate", "sql_exec_rate", "result_match_rate"]:
+        for key in ["success_rate", "retrieval_pass_rate", "generation_pass_rate", "sql_exec_rate", "result_match_rate", "final_answer_consistency_rate"]:
             current = summary.get(key)
             base = baseline.get(key)
             if current is not None and base is not None:

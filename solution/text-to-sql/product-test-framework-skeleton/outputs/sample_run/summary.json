@@ -5,6 +5,7 @@
   "generation_pass_rate": 1.0,
   "sql_exec_rate": 1.0,
   "result_match_rate": 1.0,
+  "final_answer_consistency_rate": 1.0,
   "p50_latency_ms": 10,
   "p95_latency_ms": 10,
   "failure_by_stage": {},

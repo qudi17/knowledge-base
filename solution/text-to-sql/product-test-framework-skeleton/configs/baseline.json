@@ -3,5 +3,6 @@
   "retrieval_pass_rate": 0.66,
   "generation_pass_rate": 1.0,
   "sql_exec_rate": 1.0,
-  "result_match_rate": 0.33
+  "result_match_rate": 0.33,
+  "final_answer_consistency_rate": 0.33
 }

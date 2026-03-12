@@ -218,8 +218,16 @@ Runner 只做一件事：
 
 其中：
 - `agent_input`：进入 agent/generation 阶段的原始输入
-- `loop_trace`：loop 中每一步的 thought / action / observation（可裁剪）
+- `loop_trace`：loop 中每一步的标准化记录
 - `final_answer`：最终对用户输出
+
+推荐 `loop_trace` 最小 schema：
+- `turn`
+- `thought`
+- `action`
+- `observation`
+- `tool_input`
+- `tool_output`
 
 ### 4.4 Runner 只负责采集，不负责判分
 这样后续更容易：
@@ -255,11 +263,14 @@ Runner 只做一件事：
 重点判断：
 - retrieval 产出的上下文和 SQL 计划是否被 generation 正确消费
 - agent loop 中是否出现错误决策
+- loop_trace schema 是否完整
 - 最终答案是否与 loop 逻辑一致
+- 最终答案是否与 execution result 一致
 
 ### 5.3 execution / result 评测
 输出：
 - `execution.sql_executable`
+- `execution.executed_result`
 - `execution.result_match`
 - `execution.error`
 

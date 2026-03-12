@@ -34,11 +34,39 @@ def _evaluate_retrieval(case: Case, run_result: dict) -> RetrievalRecord:
     )
 
 
+def _check_loop_trace_schema(loop_trace: list[dict]) -> tuple[bool, list[str]]:
+    required = {"turn", "thought", "action", "observation", "tool_input", "tool_output"}
+    notes: list[str] = []
+    ok = True
+    for idx, step in enumerate(loop_trace, start=1):
+        missing = required - set(step.keys())
+        if missing:
+            ok = False
+            notes.append(f"loop_trace step {idx} 缺少字段: {sorted(missing)}")
+    return ok, notes
+
+
+def _check_final_answer_consistency(case: Case, answer: str, executed_result: dict | None) -> bool | None:
+    behavior = case.behavior_expectation.get("type")
+    if behavior in {"clarify", "refuse"}:
+        return True
+    if not executed_result:
+        return None
+    if "order_count" in executed_result:
+        return str(executed_result["order_count"]) in answer
+    return None
+
+
 def _evaluate_generation(case: Case, run_result: dict, retrieval: RetrievalRecord) -> GenerationRecord:
     generation_raw = run_result.get("generation", {})
+    execution_raw = run_result.get("execution", {})
     answer = generation_raw.get("final_answer", "")
     behavior = case.behavior_expectation.get("type")
     notes: list[str] = []
+
+    loop_trace = generation_raw.get("loop_trace", [])
+    loop_ok, loop_notes = _check_loop_trace_schema(loop_trace)
+    notes.extend(loop_notes)
 
     if behavior == "clarify":
         uses_context = "确认" in answer or "口径" in answer
@@ -49,22 +77,29 @@ def _evaluate_generation(case: Case, run_result: dict, retrieval: RetrievalRecor
         if not uses_context:
             notes.append("generation 未正确拒答")
     else:
-        uses_context = retrieval.hit and retrieval.generated_sql is not None
+        uses_context = retrieval.hit and retrieval.generated_sql is not None and loop_ok
         if not uses_context:
-            notes.append("generation 建立在不完整 retrieval / SQL 规划上")
+            notes.append("generation 建立在不完整 retrieval / SQL 规划上，或 loop_trace schema 不完整")
+
+    final_answer_consistency = _check_final_answer_consistency(case, answer, execution_raw.get("executed_result"))
+    if final_answer_consistency is False:
+        notes.append("final_answer 与执行结果不一致")
 
     return GenerationRecord(
         status=generation_raw.get("status", "unknown"),
         agent_input=generation_raw.get("agent_input", {}),
-        loop_trace=generation_raw.get("loop_trace", []),
+        loop_trace=loop_trace,
         final_answer=answer,
         uses_retrieved_context_correctly=uses_context,
+        final_answer_consistency=final_answer_consistency,
         notes=notes,
     )
 
 
-def _evaluate_execution(case: Case, retrieval: RetrievalRecord, generation: GenerationRecord) -> ExecutionRecord:
+def _evaluate_execution(case: Case, retrieval: RetrievalRecord, generation: GenerationRecord, run_result: dict) -> ExecutionRecord:
     behavior = case.behavior_expectation.get("type")
+    execution_raw = run_result.get("execution", {})
+    executed_result = execution_raw.get("executed_result")
     sql_executable = retrieval.generated_sql is not None or behavior in {"clarify", "refuse"}
     result_match = False
     error = None
@@ -75,8 +110,8 @@ def _evaluate_execution(case: Case, retrieval: RetrievalRecord, generation: Gene
         result_match = generation.uses_retrieved_context_correctly is True
     else:
         expected = case.gold_result or {}
-        if "order_count" in expected:
-            result_match = str(expected["order_count"]) in generation.final_answer
+        if "order_count" in expected and executed_result:
+            result_match = executed_result.get("order_count") == expected.get("order_count")
         if retrieval.generated_sql is None:
             sql_executable = False
             error = "missing_sql_in_retrieval_stage"
@@ -84,6 +119,7 @@ def _evaluate_execution(case: Case, retrieval: RetrievalRecord, generation: Gene
     return ExecutionRecord(
         sql_executable=sql_executable,
         result_match=result_match,
+        executed_result=executed_result,
         error=error,
     )
 
@@ -98,6 +134,16 @@ def _judge_failure(retrieval: RetrievalRecord, generation: GenerationRecord, exe
         return JudgementRecord(
             primary_failure_stage="retrieval",
             primary_failure_type="missing_sql_plan",
+        )
+    if any("loop_trace step" in note for note in generation.notes):
+        return JudgementRecord(
+            primary_failure_stage="generation",
+            primary_failure_type="agent_loop_error",
+        )
+    if generation.final_answer_consistency is False:
+        return JudgementRecord(
+            primary_failure_stage="generation",
+            primary_failure_type="final_answer_inconsistency",
         )
     if generation.uses_retrieved_context_correctly is False:
         return JudgementRecord(
@@ -120,7 +166,7 @@ def _judge_failure(retrieval: RetrievalRecord, generation: GenerationRecord, exe
 def evaluate_case(case: Case, run_result: dict) -> RunRecord:
     retrieval = _evaluate_retrieval(case, run_result)
     generation = _evaluate_generation(case, run_result, retrieval)
-    execution = _evaluate_execution(case, retrieval, generation)
+    execution = _evaluate_execution(case, retrieval, generation, run_result)
     judgement = _judge_failure(retrieval, generation, execution)
 
     return RunRecord(

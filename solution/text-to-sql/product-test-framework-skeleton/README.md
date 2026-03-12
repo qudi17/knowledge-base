@@ -60,6 +60,8 @@ python3 -m src.product_eval.main --cases cases/sample_cases.jsonl --output outpu
 - retrieval / generation / execution 分层 run_records
 - **SQL 生成逻辑归属 retrieval 阶段**
 - generation 阶段记录 `agent_input`、`loop_trace`、`final_answer`
+- **loop_trace 统一 schema**：`turn / thought / action / observation / tool_input / tool_output`
+- **final answer consistency 检查**
 - retrieval hit / recall 简化判分
 - generation / result / behavior 简化判分
 - baseline diff
@@ -86,4 +88,5 @@ python3 -m src.product_eval.main --cases cases/sample_cases.jsonl --output outpu
 1. 先把 runner 接上真实产品
 2. 再补 SQL executor / result checker
 3. 再补 retrieval 的 SQL logic chain 采集
-4. 最后再补复杂 taxonomy 和更细的 report
+4. 再补 generation 的 loop trace 采集
+5. 最后再补复杂 taxonomy 和更细的 report

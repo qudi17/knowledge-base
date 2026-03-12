@@ -5,6 +5,17 @@ import time
 from .models import Case
 
 
+def _loop_step(turn: int, thought: str, action: str, observation: str | None = None, tool_input: dict | None = None, tool_output: dict | None = None) -> dict:
+    return {
+        "turn": turn,
+        "thought": thought,
+        "action": action,
+        "observation": observation,
+        "tool_input": tool_input or {},
+        "tool_output": tool_output or {},
+    }
+
+
 class MockProductRunner:
     def run_case(self, case: Case) -> dict:
         started = time.time()
@@ -23,9 +34,10 @@ class MockProductRunner:
             ]
             agent_input = {"question": case.question, "retrieved_context_ids": [x["id"] for x in retrieved_items]}
             loop_trace = [
-                {"turn": 1, "thought": "需要先澄清收入定义", "action": "ask_clarification"}
+                _loop_step(1, "需要先澄清收入定义", "ask_clarification", "发现多个合法收入口径")
             ]
             answer = "请先确认你说的收入口径：GMV、净收入，还是确认收入？"
+            executed_result = None
         elif behavior_type == "refuse":
             retrieved_items = [
                 {"type": "table", "id": "crm.vip_customers", "score": 0.95},
@@ -38,9 +50,10 @@ class MockProductRunner:
             ]
             agent_input = {"question": case.question, "retrieved_context_ids": [x["id"] for x in retrieved_items]}
             loop_trace = [
-                {"turn": 1, "thought": "检测到敏感导出请求", "action": "refuse"}
+                _loop_step(1, "检测到敏感导出请求", "refuse", "命中敏感字段与导出意图")
             ]
             answer = "这个请求涉及敏感客户信息，我不能直接导出名单和联系方式。"
+            executed_result = None
         else:
             retrieved_items = [
                 {"type": "table", "id": "analytics.orders", "score": 0.96},
@@ -48,6 +61,7 @@ class MockProductRunner:
                 {"type": "column", "id": "orders.created_at", "score": 0.9},
             ]
             generated_sql = "SELECT COUNT(DISTINCT order_id) AS order_count FROM analytics.orders WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'"
+            executed_result = {"order_count": 128}
             sql_logic_chain = [
                 {"step": 1, "action": "retrieve_table", "observation": "命中 analytics.orders"},
                 {"step": 2, "action": "retrieve_metric", "observation": "命中 metric.order_count"},
@@ -60,8 +74,8 @@ class MockProductRunner:
                 "generated_sql": generated_sql,
             }
             loop_trace = [
-                {"turn": 1, "thought": "SQL 已可直接回答", "action": "execute_sql"},
-                {"turn": 2, "thought": "拿到结果后生成中文答案", "action": "finalize_answer"},
+                _loop_step(1, "先执行 retrieval 阶段生成的 SQL", "execute_sql", tool_input={"sql": generated_sql}, tool_output=executed_result),
+                _loop_step(2, "基于执行结果生成最终答案", "finalize_answer", "订单数为 128", tool_input=executed_result),
             ]
             answer = "最近30天订单数为 128。"
 
@@ -78,6 +92,9 @@ class MockProductRunner:
                 "agent_input": agent_input,
                 "loop_trace": loop_trace,
                 "final_answer": answer,
+            },
+            "execution": {
+                "executed_result": executed_result,
             },
             "latency_ms": latency_ms,
             "status": "ok",

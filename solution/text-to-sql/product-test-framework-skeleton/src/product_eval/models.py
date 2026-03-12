@@ -34,6 +34,7 @@ class GenerationRecord:
     loop_trace: list[dict[str, Any]] = field(default_factory=list)
     final_answer: str = ""
     uses_retrieved_context_correctly: bool | None = None
+    final_answer_consistency: bool | None = None
     notes: list[str] = field(default_factory=list)
 
 
@@ -41,6 +42,7 @@ class GenerationRecord:
 class ExecutionRecord:
     sql_executable: bool
     result_match: bool
+    executed_result: dict[str, Any] | None = None
     error: str | None = None
 
 
