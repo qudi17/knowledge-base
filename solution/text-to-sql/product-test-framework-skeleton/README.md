@@ -58,6 +58,8 @@ python3 -m src.product_eval.main --cases cases/sample_cases.jsonl --output outpu
 - 本地 JSONL case 读取
 - mock runner
 - retrieval / generation / execution 分层 run_records
+- **SQL 生成逻辑归属 retrieval 阶段**
+- generation 阶段记录 `agent_input`、`loop_trace`、`final_answer`
 - retrieval hit / recall 简化判分
 - generation / result / behavior 简化判分
 - baseline diff
@@ -83,4 +85,5 @@ python3 -m src.product_eval.main --cases cases/sample_cases.jsonl --output outpu
 
 1. 先把 runner 接上真实产品
 2. 再补 SQL executor / result checker
-3. 最后再补复杂 taxonomy 和更细的 report
+3. 再补 retrieval 的 SQL logic chain 采集
+4. 最后再补复杂 taxonomy 和更细的 report

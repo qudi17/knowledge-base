@@ -20,12 +20,16 @@ def _evaluate_retrieval(case: Case, run_result: dict) -> RetrievalRecord:
     notes: list[str] = []
     if recall < 1.0:
         notes.append("retrieval 未召回全部 must_have 项")
+    if retrieval_raw.get("generated_sql"):
+        notes.append("SQL 生成已归属 retrieval 阶段")
     return RetrievalRecord(
         status=retrieval_raw.get("status", "unknown"),
         retrieved_items=retrieved_items,
         expected_items=expected_items,
         hit=recall == 1.0,
         recall=round(recall, 4),
+        generated_sql=retrieval_raw.get("generated_sql"),
+        sql_logic_chain=retrieval_raw.get("sql_logic_chain", []),
         notes=notes,
     )
 
@@ -45,22 +49,23 @@ def _evaluate_generation(case: Case, run_result: dict, retrieval: RetrievalRecor
         if not uses_context:
             notes.append("generation 未正确拒答")
     else:
-        uses_context = retrieval.hit
+        uses_context = retrieval.hit and retrieval.generated_sql is not None
         if not uses_context:
-            notes.append("generation 建立在不完整 retrieval 上")
+            notes.append("generation 建立在不完整 retrieval / SQL 规划上")
 
     return GenerationRecord(
         status=generation_raw.get("status", "unknown"),
-        generated_sql=generation_raw.get("generated_sql"),
+        agent_input=generation_raw.get("agent_input", {}),
+        loop_trace=generation_raw.get("loop_trace", []),
         final_answer=answer,
         uses_retrieved_context_correctly=uses_context,
         notes=notes,
     )
 
 
-def _evaluate_execution(case: Case, generation: GenerationRecord) -> ExecutionRecord:
+def _evaluate_execution(case: Case, retrieval: RetrievalRecord, generation: GenerationRecord) -> ExecutionRecord:
     behavior = case.behavior_expectation.get("type")
-    sql_executable = generation.generated_sql is not None or behavior in {"clarify", "refuse"}
+    sql_executable = retrieval.generated_sql is not None or behavior in {"clarify", "refuse"}
     result_match = False
     error = None
 
@@ -72,9 +77,9 @@ def _evaluate_execution(case: Case, generation: GenerationRecord) -> ExecutionRe
         expected = case.gold_result or {}
         if "order_count" in expected:
             result_match = str(expected["order_count"]) in generation.final_answer
-        if generation.generated_sql is None:
+        if retrieval.generated_sql is None:
             sql_executable = False
-            error = "missing_sql"
+            error = "missing_sql_in_retrieval_stage"
 
     return ExecutionRecord(
         sql_executable=sql_executable,
@@ -89,6 +94,11 @@ def _judge_failure(retrieval: RetrievalRecord, generation: GenerationRecord, exe
             primary_failure_stage="retrieval",
             primary_failure_type="missing_required_context",
         )
+    if not retrieval.generated_sql and execution.error == "missing_sql_in_retrieval_stage":
+        return JudgementRecord(
+            primary_failure_stage="retrieval",
+            primary_failure_type="missing_sql_plan",
+        )
     if generation.uses_retrieved_context_correctly is False:
         return JudgementRecord(
             primary_failure_stage="generation",
@@ -96,7 +106,7 @@ def _judge_failure(retrieval: RetrievalRecord, generation: GenerationRecord, exe
         )
     if not execution.sql_executable:
         return JudgementRecord(
-            primary_failure_stage="generation",
+            primary_failure_stage="execution",
             primary_failure_type="sql_execution_error",
         )
     if not execution.result_match:
@@ -110,7 +120,7 @@ def _judge_failure(retrieval: RetrievalRecord, generation: GenerationRecord, exe
 def evaluate_case(case: Case, run_result: dict) -> RunRecord:
     retrieval = _evaluate_retrieval(case, run_result)
     generation = _evaluate_generation(case, run_result, retrieval)
-    execution = _evaluate_execution(case, generation)
+    execution = _evaluate_execution(case, retrieval, generation)
     judgement = _judge_failure(retrieval, generation, execution)
 
     return RunRecord(

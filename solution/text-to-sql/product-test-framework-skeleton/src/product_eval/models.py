@@ -22,14 +22,17 @@ class RetrievalRecord:
     expected_items: list[str] = field(default_factory=list)
     hit: bool = False
     recall: float = 0.0
+    generated_sql: str | None = None
+    sql_logic_chain: list[dict[str, Any]] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
 
 @dataclass
 class GenerationRecord:
     status: str
-    generated_sql: str | None
-    final_answer: str
+    agent_input: dict[str, Any] = field(default_factory=dict)
+    loop_trace: list[dict[str, Any]] = field(default_factory=list)
+    final_answer: str = ""
     uses_retrieved_context_correctly: bool | None = None
     notes: list[str] = field(default_factory=list)
 

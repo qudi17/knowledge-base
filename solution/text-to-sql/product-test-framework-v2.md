@@ -109,6 +109,7 @@ Runner 只做一件事：
 这里的关键点是：
 
 > `run_records` 必须分阶段记录，至少拆成 retrieval / generation / execution 三层。
+> 并且按你的定义：**SQL 生成属于 retrieval 阶段**，generation 阶段记录 agent 消费这些上下文后的输入、loop 逻辑和最终答案。
 
 ### 4.1 单次 run record 建议结构
 
@@ -139,11 +140,25 @@ Runner 只做一件事：
     "expected_items": ["analytics.orders", "metric.order_count", "orders.created_at"],
     "hit": true,
     "recall": 1.0,
+    "generated_sql": "SELECT COUNT(DISTINCT order_id) ...",
+    "sql_logic_chain": [
+      {"step": 1, "action": "retrieve_table", "observation": "命中 analytics.orders"},
+      {"step": 2, "action": "retrieve_metric", "observation": "命中 metric.order_count"},
+      {"step": 3, "action": "compose_sql", "observation": "生成近30天订单数 SQL"}
+    ],
     "notes": []
   },
   "generation": {
     "status": "ok",
-    "generated_sql": "SELECT COUNT(DISTINCT order_id) ...",
+    "agent_input": {
+      "question": "最近30天订单数是多少？",
+      "retrieved_context_ids": ["analytics.orders", "metric.order_count", "orders.created_at"],
+      "generated_sql": "SELECT COUNT(DISTINCT order_id) ..."
+    },
+    "loop_trace": [
+      {"turn": 1, "thought": "先执行 retrieval 阶段生成的 SQL", "action": "execute_sql"},
+      {"turn": 2, "thought": "基于结果生成最终答案", "action": "finalize_answer"}
+    ],
     "final_answer": "最近30天订单数为 128。",
     "uses_retrieved_context_correctly": true,
     "notes": []
@@ -168,7 +183,15 @@ Runner 只做一件事：
 - `expected_items`
 - `hit`
 - `recall`
+- `generated_sql`
+- `sql_logic_chain`
 - `notes`
+
+这里 retrieval 不只是“召回了哪些表/字段”，还包括：
+
+> LLM 如何基于召回上下文规划并生成 SQL。
+
+也就是说，SQL 生成链路属于 retrieval 阶段的一部分。
 
 为了能评估 retrieval，每条 case 最好额外定义：
 
@@ -183,14 +206,20 @@ Runner 只做一件事：
 ### 4.3 generation 层记录什么
 
 建议最少记录：
-- `generated_sql`
+- `agent_input`
+- `loop_trace`
 - `final_answer`
 - `uses_retrieved_context_correctly`
 - `notes`
 
-generation 的重点不是只看“有没有产出 SQL”，而是：
+按你的定义，generation 不再负责生成 SQL，而是负责：
 
-> 在 retrieval 已经给到足够上下文时，generation 有没有把上下文用对。
+> 消费 retrieval 阶段产出的上下文与 SQL 计划，并完整记录 agent 的输入、loop 过程和最终答案。
+
+其中：
+- `agent_input`：进入 agent/generation 阶段的原始输入
+- `loop_trace`：loop 中每一步的 thought / action / observation（可裁剪）
+- `final_answer`：最终对用户输出
 
 ### 4.4 Runner 只负责采集，不负责判分
 这样后续更容易：
@@ -217,14 +246,16 @@ generation 的重点不是只看“有没有产出 SQL”，而是：
 
 ### 5.2 generation 评测
 输出：
-- `generation.generated_sql`
+- `generation.agent_input`
+- `generation.loop_trace`
 - `generation.final_answer`
 - `generation.uses_retrieved_context_correctly`
 - `generation.notes`
 
 重点判断：
-- retrieval 召回足够时，generation 有没有用对上下文
-- 是否出现 hallucinated field / wrong join / wrong aggregation
+- retrieval 产出的上下文和 SQL 计划是否被 generation 正确消费
+- agent loop 中是否出现错误决策
+- 最终答案是否与 loop 逻辑一致
 
 ### 5.3 execution / result 评测
 输出：
@@ -250,12 +281,11 @@ generation 的重点不是只看“有没有产出 SQL”，而是：
   - `missing_metric_definition`
   - `missing_time_dimension`
   - `missing_required_context`
+  - `missing_sql_plan`
 - generation：
-  - `wrong_join`
-  - `wrong_aggregation`
-  - `wrong_filter`
-  - `wrong_time_semantics`
   - `misused_retrieved_context`
+  - `agent_loop_error`
+  - `final_answer_inconsistency`
   - `result_mismatch`
 - execution：
   - `sql_execution_error`
@@ -288,7 +318,8 @@ generation 的重点不是只看“有没有产出 SQL”，而是：
 ### generation 指标
 - `uses_retrieved_context_correctly_rate`
 - `generation_failure_rate`
-- `hallucinated_field_rate`
+- `agent_loop_error_rate`
+- `final_answer_consistency_rate`
 
 ### 安全与治理指标
 - `clarification_required_pass_rate`
