@@ -9,17 +9,20 @@ from .models import RunRecord
 
 def build_summary(records: list[RunRecord]) -> dict:
     total = len(records) or 1
-    failures = Counter(r.primary_failure_type for r in records if r.primary_failure_type)
+    stage_failures = Counter(r.judgement.primary_failure_stage for r in records if r.judgement.primary_failure_stage)
+    type_failures = Counter(r.judgement.primary_failure_type for r in records if r.judgement.primary_failure_type)
     latencies = sorted(r.latency_ms for r in records)
     return {
         "case_count": len(records),
-        "success_rate": round(sum(1 for r in records if r.result_match and r.behavior_pass) / total, 4),
-        "sql_exec_rate": round(sum(1 for r in records if r.sql_executable) / total, 4),
-        "result_match_rate": round(sum(1 for r in records if r.result_match) / total, 4),
-        "behavior_pass_rate": round(sum(1 for r in records if r.behavior_pass) / total, 4),
+        "success_rate": round(sum(1 for r in records if r.judgement.primary_failure_stage is None) / total, 4),
+        "retrieval_pass_rate": round(sum(1 for r in records if r.retrieval.hit) / total, 4),
+        "generation_pass_rate": round(sum(1 for r in records if r.generation.uses_retrieved_context_correctly is not False) / total, 4),
+        "sql_exec_rate": round(sum(1 for r in records if r.execution.sql_executable) / total, 4),
+        "result_match_rate": round(sum(1 for r in records if r.execution.result_match) / total, 4),
         "p50_latency_ms": latencies[len(latencies) // 2] if latencies else 0,
         "p95_latency_ms": latencies[min(len(latencies) - 1, int(len(latencies) * 0.95))] if latencies else 0,
-        "failure_count_by_type": dict(failures),
+        "failure_by_stage": dict(stage_failures),
+        "failure_by_type": dict(type_failures),
     }
 
 
@@ -37,16 +40,24 @@ def build_report(summary: dict, baseline: dict | None) -> str:
         "## Summary",
         f"- case_count: {summary['case_count']}",
         f"- success_rate: {summary['success_rate']}",
+        f"- retrieval_pass_rate: {summary['retrieval_pass_rate']}",
+        f"- generation_pass_rate: {summary['generation_pass_rate']}",
         f"- sql_exec_rate: {summary['sql_exec_rate']}",
         f"- result_match_rate: {summary['result_match_rate']}",
-        f"- behavior_pass_rate: {summary['behavior_pass_rate']}",
         f"- p50_latency_ms: {summary['p50_latency_ms']}",
         f"- p95_latency_ms: {summary['p95_latency_ms']}",
         "",
-        "## Failure Breakdown",
+        "## Failure By Stage",
     ]
-    if summary["failure_count_by_type"]:
-        for k, v in summary["failure_count_by_type"].items():
+    if summary["failure_by_stage"]:
+        for k, v in summary["failure_by_stage"].items():
+            lines.append(f"- {k}: {v}")
+    else:
+        lines.append("- none")
+
+    lines.extend(["", "## Failure By Type"])
+    if summary["failure_by_type"]:
+        for k, v in summary["failure_by_type"].items():
             lines.append(f"- {k}: {v}")
     else:
         lines.append("- none")
@@ -54,7 +65,7 @@ def build_report(summary: dict, baseline: dict | None) -> str:
     lines.append("")
     lines.append("## Baseline Diff")
     if baseline:
-        for key in ["success_rate", "sql_exec_rate", "result_match_rate", "behavior_pass_rate"]:
+        for key in ["success_rate", "retrieval_pass_rate", "generation_pass_rate", "sql_exec_rate", "result_match_rate"]:
             current = summary.get(key)
             base = baseline.get(key)
             if current is not None and base is not None:

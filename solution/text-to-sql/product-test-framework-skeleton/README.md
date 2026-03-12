@@ -57,8 +57,9 @@ python3 -m src.product_eval.main --cases cases/sample_cases.jsonl --output outpu
 
 - 本地 JSONL case 读取
 - mock runner
-- SQL 可执行占位字段
-- 结果/行为简单判分
+- retrieval / generation / execution 分层 run_records
+- retrieval hit / recall 简化判分
+- generation / result / behavior 简化判分
 - baseline diff
 
 这足够作为你后续接产品 API 的骨架。

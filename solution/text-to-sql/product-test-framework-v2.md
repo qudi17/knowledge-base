@@ -29,9 +29,9 @@ case dataset
    ↓
 product runner
    ↓
-raw run records
+raw run records (retrieval / generation / execution)
    ↓
-sql executor / result checker / behavior checker
+stage evaluator
    ↓
 metrics aggregation
    ↓
@@ -44,10 +44,10 @@ summary + diff report
 描述单条测试题。
 
 ### B. Run 执行层
-统一调用产品接口，拿回 SQL / answer / trace / latency。
+统一调用产品接口，分别拿回 retrieval / generation / execution 所需原始信息。
 
 ### C. Eval 评测层
-基于执行结果、golden result 和行为规则打分。
+基于分阶段 run record 分别判定 retrieval、generation、execution 是否通过，并做一级归因。
 
 ### D. Report 报告层
 输出总体指标、tag 切片、失败样例、版本 diff。
@@ -106,44 +106,98 @@ Runner 只做一件事：
 
 > 把标准化 case 输入产品，保存标准化 run record。
 
-单次 run record 建议包含：
+这里的关键点是：
+
+> `run_records` 必须分阶段记录，至少拆成 retrieval / generation / execution 三层。
+
+### 4.1 单次 run record 建议结构
 
 - `run_id`
 - `case_id`
 - `model_version`
 - `prompt_version`
 - `semantic_layer_version`
-- `generated_sql`
-- `final_answer`
-- `tool_trace`
 - `latency_ms`
 - `status`
-- `error`
+- `retrieval`
+- `generation`
+- `execution`
+- `judgement`
 
-### 4.1 统一输入/输出接口
-建议产品 runner 抽象成：
+推荐结构：
 
-```python
-result = runner.run_case(case)
-```
-
-返回：
-
-```python
+```json
 {
-  "generated_sql": "...",
-  "final_answer": "...",
-  "tool_trace": [],
-  "latency_ms": 1200,
-  "status": "ok"
+  "case_id": "orders_count_001",
+  "question": "最近30天订单数是多少？",
+  "retrieval": {
+    "status": "ok",
+    "retrieved_items": [
+      {"type": "table", "id": "analytics.orders", "score": 0.92},
+      {"type": "metric", "id": "metric.order_count", "score": 0.88}
+    ],
+    "expected_items": ["analytics.orders", "metric.order_count", "orders.created_at"],
+    "hit": true,
+    "recall": 1.0,
+    "notes": []
+  },
+  "generation": {
+    "status": "ok",
+    "generated_sql": "SELECT COUNT(DISTINCT order_id) ...",
+    "final_answer": "最近30天订单数为 128。",
+    "uses_retrieved_context_correctly": true,
+    "notes": []
+  },
+  "execution": {
+    "sql_executable": true,
+    "result_match": true,
+    "error": null
+  },
+  "judgement": {
+    "primary_failure_stage": null,
+    "primary_failure_type": null,
+    "secondary_failure_types": []
+  }
 }
 ```
 
-### 4.2 Runner 只负责采集，不负责判分
+### 4.2 retrieval 层记录什么
+
+建议最少记录：
+- `retrieved_items`
+- `expected_items`
+- `hit`
+- `recall`
+- `notes`
+
+为了能评估 retrieval，每条 case 最好额外定义：
+
+```json
+{
+  "expected_retrieval": {
+    "must_have": ["analytics.orders", "metric.order_count", "orders.created_at"]
+  }
+}
+```
+
+### 4.3 generation 层记录什么
+
+建议最少记录：
+- `generated_sql`
+- `final_answer`
+- `uses_retrieved_context_correctly`
+- `notes`
+
+generation 的重点不是只看“有没有产出 SQL”，而是：
+
+> 在 retrieval 已经给到足够上下文时，generation 有没有把上下文用对。
+
+### 4.4 Runner 只负责采集，不负责判分
 这样后续更容易：
 - 重跑 evaluator
 - 新增指标
 - 离线复盘旧结果
+- 单独分析 retrieval / generation 退化
 
 ---
 
@@ -151,37 +205,63 @@ result = runner.run_case(case)
 
 建议把 evaluator 拆成 4 个子模块。
 
-### 5.1 SQL 执行评测
+### 5.1 retrieval 评测
 输出：
-- `sql_executable`
-- `execution_error`
+- `retrieval.hit`
+- `retrieval.recall`
+- `retrieval.notes`
 
-### 5.2 结果评测
-输出：
-- `result_match`
-- `result_diff`
+重点判断：
+- 有没有召回必须的表 / 字段 / metric / 时间字段
+- top-k 里有没有关键上下文
 
-### 5.3 行为评测
+### 5.2 generation 评测
 输出：
-- `clarification_ok`
-- `safety_ok`
-- `behavior_notes`
+- `generation.generated_sql`
+- `generation.final_answer`
+- `generation.uses_retrieved_context_correctly`
+- `generation.notes`
 
-### 5.4 失败分类
+重点判断：
+- retrieval 召回足够时，generation 有没有用对上下文
+- 是否出现 hallucinated field / wrong join / wrong aggregation
+
+### 5.3 execution / result 评测
 输出：
-- `primary_failure_type`
-- `secondary_failure_types`
+- `execution.sql_executable`
+- `execution.result_match`
+- `execution.error`
+
+### 5.4 失败归因
+输出：
+- `judgement.primary_failure_stage`
+- `judgement.primary_failure_type`
+- `judgement.secondary_failure_types`
+
+一级 stage 建议至少包含：
+- `retrieval`
+- `generation`
+- `execution`
 
 推荐 failure taxonomy：
-- `schema_linking_error`
-- `join_error`
-- `metric_error`
-- `time_semantics_error`
-- `sql_execution_error`
-- `result_mismatch`
-- `clarification_error`
-- `safety_error`
-- `narrative_error`
+- retrieval：
+  - `missing_table`
+  - `missing_column`
+  - `missing_metric_definition`
+  - `missing_time_dimension`
+  - `missing_required_context`
+- generation：
+  - `wrong_join`
+  - `wrong_aggregation`
+  - `wrong_filter`
+  - `wrong_time_semantics`
+  - `misused_retrieved_context`
+  - `result_mismatch`
+- execution：
+  - `sql_execution_error`
+- behavior：
+  - `clarification_error`
+  - `safety_error`
 
 ---
 
@@ -192,11 +272,23 @@ result = runner.run_case(case)
 ### 基础指标
 - `case_count`
 - `success_rate`
+- `retrieval_pass_rate`
+- `generation_pass_rate`
 - `sql_exec_rate`
 - `result_match_rate`
-- `behavior_pass_rate`
 - `p50_latency_ms`
 - `p95_latency_ms`
+
+### retrieval 指标
+- `retrieval_hit_rate`
+- `must_have_recall`
+- `wrong_top1_context_rate`
+- `retrieval_noise_rate`
+
+### generation 指标
+- `uses_retrieved_context_correctly_rate`
+- `generation_failure_rate`
+- `hallucinated_field_rate`
 
 ### 安全与治理指标
 - `clarification_required_pass_rate`
@@ -205,7 +297,8 @@ result = runner.run_case(case)
 - `permission_boundary_violation_rate`
 
 ### 诊断指标
-- `failure_count_by_type`
+- `failure_by_stage`
+- `failure_by_type`
 - `pass_rate_by_tag`
 - `result_match_rate_by_domain`
 
@@ -264,10 +357,12 @@ knowledge-base/solution/text-to-sql/product-test-framework-skeleton/
 - 10 条 behavior case
 
 ### evaluator
+- retrieval hit / recall 检查
+- generation 是否正确使用 retrieval context
 - SQL 可执行
 - 结果比对
 - 澄清/拒答行为检查
-- failure taxonomy 一级分类
+- failure taxonomy 一级分类（先区分 retrieval / generation / execution）
 
 ### report
 - summary JSON
