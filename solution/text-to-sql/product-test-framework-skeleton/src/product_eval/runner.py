@@ -21,7 +21,61 @@ class MockProductRunner:
         started = time.time()
         behavior_type = case.behavior_expectation.get("type")
 
-        if behavior_type == "clarify":
+        if case.id == "fail_retrieval_missing_context_001":
+            retrieved_items = [
+                {"type": "table", "id": "analytics.orders", "score": 0.96},
+                {"type": "metric", "id": "metric.order_count", "score": 0.93}
+            ]
+            generated_sql = None
+            sql_logic_chain = [
+                {"step": 1, "action": "retrieve_table", "observation": "命中 analytics.orders"},
+                {"step": 2, "action": "retrieve_metric", "observation": "命中 metric.order_count"}
+            ]
+            agent_input = {"question": case.question, "retrieved_context_ids": [x["id"] for x in retrieved_items]}
+            loop_trace = [_loop_step(1, "缺少时间字段，无法形成完整 SQL", "stop", "retrieval context 不完整")]
+            answer = "我暂时无法确定最近30天订单数。"
+            executed_result = None
+        elif case.id == "fail_generation_loop_schema_001":
+            retrieved_items = [
+                {"type": "table", "id": "analytics.orders", "score": 0.96},
+                {"type": "metric", "id": "metric.order_count", "score": 0.93},
+                {"type": "column", "id": "orders.created_at", "score": 0.9},
+            ]
+            generated_sql = "SELECT COUNT(DISTINCT order_id) AS order_count FROM analytics.orders WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'"
+            sql_logic_chain = [
+                {"step": 1, "action": "retrieve_table", "observation": "命中 analytics.orders"},
+                {"step": 2, "action": "retrieve_metric", "observation": "命中 metric.order_count"},
+                {"step": 3, "action": "retrieve_time_dimension", "observation": "命中 orders.created_at"},
+                {"step": 4, "action": "compose_sql", "observation": "生成 SQL"},
+            ]
+            agent_input = {"question": case.question, "retrieved_context_ids": [x["id"] for x in retrieved_items], "generated_sql": generated_sql}
+            loop_trace = [
+                {"turn": 1, "thought": "先执行 SQL", "action": "execute_sql", "tool_input": {"sql": generated_sql}},
+                _loop_step(2, "再生成答案", "finalize_answer", "订单数为 128", tool_input={"order_count": 128}),
+            ]
+            answer = "最近30天订单数为 128。"
+            executed_result = {"order_count": 128}
+        elif case.id == "fail_generation_answer_inconsistent_001":
+            retrieved_items = [
+                {"type": "table", "id": "analytics.orders", "score": 0.96},
+                {"type": "metric", "id": "metric.order_count", "score": 0.93},
+                {"type": "column", "id": "orders.created_at", "score": 0.9},
+            ]
+            generated_sql = "SELECT COUNT(DISTINCT order_id) AS order_count FROM analytics.orders WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'"
+            sql_logic_chain = [
+                {"step": 1, "action": "retrieve_table", "observation": "命中 analytics.orders"},
+                {"step": 2, "action": "retrieve_metric", "observation": "命中 metric.order_count"},
+                {"step": 3, "action": "retrieve_time_dimension", "observation": "命中 orders.created_at"},
+                {"step": 4, "action": "compose_sql", "observation": "生成 SQL"},
+            ]
+            agent_input = {"question": case.question, "retrieved_context_ids": [x["id"] for x in retrieved_items], "generated_sql": generated_sql}
+            loop_trace = [
+                _loop_step(1, "先执行 retrieval 阶段生成的 SQL", "execute_sql", tool_input={"sql": generated_sql}, tool_output={"order_count": 128}),
+                _loop_step(2, "基于执行结果生成最终答案", "finalize_answer", "订单数为 999", tool_input={"order_count": 128}),
+            ]
+            answer = "最近30天订单数为 999。"
+            executed_result = {"order_count": 128}
+        elif behavior_type == "clarify":
             retrieved_items = [
                 {"type": "metric", "id": "metric.gmv", "score": 0.91},
                 {"type": "metric", "id": "metric.net_revenue", "score": 0.88},

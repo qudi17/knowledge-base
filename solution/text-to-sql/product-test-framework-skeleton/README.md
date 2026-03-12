@@ -70,6 +70,19 @@ python3 -m src.product_eval.main --cases cases/sample_cases.jsonl --output outpu
 
 ---
 
+## 内置故意失败样例
+
+当前 sample cases 额外包含 3 条故意失败样例，用来验证归因逻辑：
+
+- `fail_retrieval_missing_context_001`
+  - 预期归因：`retrieval / missing_required_context`
+- `fail_generation_loop_schema_001`
+  - 预期归因：`generation / agent_loop_error`
+- `fail_generation_answer_inconsistent_001`
+  - 预期归因：`generation / final_answer_inconsistency`
+
+---
+
 ## 你下一步通常会改 3 个地方
 
 ### 1. `runner.py`

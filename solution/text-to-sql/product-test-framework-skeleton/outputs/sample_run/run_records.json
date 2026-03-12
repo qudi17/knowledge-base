@@ -269,5 +269,311 @@
       "primary_failure_type": null,
       "secondary_failure_types": []
     }
+  },
+  {
+    "case_id": "fail_retrieval_missing_context_001",
+    "question": "最近30天订单数是多少？",
+    "latency_ms": 10,
+    "status": "ok",
+    "retrieval": {
+      "status": "ok",
+      "retrieved_items": [
+        {
+          "type": "table",
+          "id": "analytics.orders",
+          "score": 0.96
+        },
+        {
+          "type": "metric",
+          "id": "metric.order_count",
+          "score": 0.93
+        }
+      ],
+      "expected_items": [
+        "analytics.orders",
+        "metric.order_count",
+        "orders.created_at"
+      ],
+      "hit": false,
+      "recall": 0.6667,
+      "generated_sql": null,
+      "sql_logic_chain": [
+        {
+          "step": 1,
+          "action": "retrieve_table",
+          "observation": "命中 analytics.orders"
+        },
+        {
+          "step": 2,
+          "action": "retrieve_metric",
+          "observation": "命中 metric.order_count"
+        }
+      ],
+      "notes": [
+        "retrieval 未召回全部 must_have 项"
+      ]
+    },
+    "generation": {
+      "status": "ok",
+      "agent_input": {
+        "question": "最近30天订单数是多少？",
+        "retrieved_context_ids": [
+          "analytics.orders",
+          "metric.order_count"
+        ]
+      },
+      "loop_trace": [
+        {
+          "turn": 1,
+          "thought": "缺少时间字段，无法形成完整 SQL",
+          "action": "stop",
+          "observation": "retrieval context 不完整",
+          "tool_input": {},
+          "tool_output": {}
+        }
+      ],
+      "final_answer": "我暂时无法确定最近30天订单数。",
+      "uses_retrieved_context_correctly": false,
+      "final_answer_consistency": null,
+      "notes": [
+        "generation 建立在不完整 retrieval / SQL 规划上，或 loop_trace schema 不完整"
+      ]
+    },
+    "execution": {
+      "sql_executable": false,
+      "result_match": false,
+      "executed_result": null,
+      "error": "missing_sql_in_retrieval_stage"
+    },
+    "judgement": {
+      "primary_failure_stage": "retrieval",
+      "primary_failure_type": "missing_required_context",
+      "secondary_failure_types": []
+    }
+  },
+  {
+    "case_id": "fail_generation_loop_schema_001",
+    "question": "最近30天订单数是多少？",
+    "latency_ms": 10,
+    "status": "ok",
+    "retrieval": {
+      "status": "ok",
+      "retrieved_items": [
+        {
+          "type": "table",
+          "id": "analytics.orders",
+          "score": 0.96
+        },
+        {
+          "type": "metric",
+          "id": "metric.order_count",
+          "score": 0.93
+        },
+        {
+          "type": "column",
+          "id": "orders.created_at",
+          "score": 0.9
+        }
+      ],
+      "expected_items": [
+        "analytics.orders",
+        "metric.order_count",
+        "orders.created_at"
+      ],
+      "hit": true,
+      "recall": 1.0,
+      "generated_sql": "SELECT COUNT(DISTINCT order_id) AS order_count FROM analytics.orders WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'",
+      "sql_logic_chain": [
+        {
+          "step": 1,
+          "action": "retrieve_table",
+          "observation": "命中 analytics.orders"
+        },
+        {
+          "step": 2,
+          "action": "retrieve_metric",
+          "observation": "命中 metric.order_count"
+        },
+        {
+          "step": 3,
+          "action": "retrieve_time_dimension",
+          "observation": "命中 orders.created_at"
+        },
+        {
+          "step": 4,
+          "action": "compose_sql",
+          "observation": "生成 SQL"
+        }
+      ],
+      "notes": [
+        "SQL 生成已归属 retrieval 阶段"
+      ]
+    },
+    "generation": {
+      "status": "ok",
+      "agent_input": {
+        "question": "最近30天订单数是多少？",
+        "retrieved_context_ids": [
+          "analytics.orders",
+          "metric.order_count",
+          "orders.created_at"
+        ],
+        "generated_sql": "SELECT COUNT(DISTINCT order_id) AS order_count FROM analytics.orders WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'"
+      },
+      "loop_trace": [
+        {
+          "turn": 1,
+          "thought": "先执行 SQL",
+          "action": "execute_sql",
+          "tool_input": {
+            "sql": "SELECT COUNT(DISTINCT order_id) AS order_count FROM analytics.orders WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'"
+          }
+        },
+        {
+          "turn": 2,
+          "thought": "再生成答案",
+          "action": "finalize_answer",
+          "observation": "订单数为 128",
+          "tool_input": {
+            "order_count": 128
+          },
+          "tool_output": {}
+        }
+      ],
+      "final_answer": "最近30天订单数为 128。",
+      "uses_retrieved_context_correctly": false,
+      "final_answer_consistency": true,
+      "notes": [
+        "loop_trace step 1 缺少字段: ['observation', 'tool_output']",
+        "generation 建立在不完整 retrieval / SQL 规划上，或 loop_trace schema 不完整"
+      ]
+    },
+    "execution": {
+      "sql_executable": true,
+      "result_match": true,
+      "executed_result": {
+        "order_count": 128
+      },
+      "error": null
+    },
+    "judgement": {
+      "primary_failure_stage": "generation",
+      "primary_failure_type": "agent_loop_error",
+      "secondary_failure_types": []
+    }
+  },
+  {
+    "case_id": "fail_generation_answer_inconsistent_001",
+    "question": "最近30天订单数是多少？",
+    "latency_ms": 10,
+    "status": "ok",
+    "retrieval": {
+      "status": "ok",
+      "retrieved_items": [
+        {
+          "type": "table",
+          "id": "analytics.orders",
+          "score": 0.96
+        },
+        {
+          "type": "metric",
+          "id": "metric.order_count",
+          "score": 0.93
+        },
+        {
+          "type": "column",
+          "id": "orders.created_at",
+          "score": 0.9
+        }
+      ],
+      "expected_items": [
+        "analytics.orders",
+        "metric.order_count",
+        "orders.created_at"
+      ],
+      "hit": true,
+      "recall": 1.0,
+      "generated_sql": "SELECT COUNT(DISTINCT order_id) AS order_count FROM analytics.orders WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'",
+      "sql_logic_chain": [
+        {
+          "step": 1,
+          "action": "retrieve_table",
+          "observation": "命中 analytics.orders"
+        },
+        {
+          "step": 2,
+          "action": "retrieve_metric",
+          "observation": "命中 metric.order_count"
+        },
+        {
+          "step": 3,
+          "action": "retrieve_time_dimension",
+          "observation": "命中 orders.created_at"
+        },
+        {
+          "step": 4,
+          "action": "compose_sql",
+          "observation": "生成 SQL"
+        }
+      ],
+      "notes": [
+        "SQL 生成已归属 retrieval 阶段"
+      ]
+    },
+    "generation": {
+      "status": "ok",
+      "agent_input": {
+        "question": "最近30天订单数是多少？",
+        "retrieved_context_ids": [
+          "analytics.orders",
+          "metric.order_count",
+          "orders.created_at"
+        ],
+        "generated_sql": "SELECT COUNT(DISTINCT order_id) AS order_count FROM analytics.orders WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'"
+      },
+      "loop_trace": [
+        {
+          "turn": 1,
+          "thought": "先执行 retrieval 阶段生成的 SQL",
+          "action": "execute_sql",
+          "observation": null,
+          "tool_input": {
+            "sql": "SELECT COUNT(DISTINCT order_id) AS order_count FROM analytics.orders WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'"
+          },
+          "tool_output": {
+            "order_count": 128
+          }
+        },
+        {
+          "turn": 2,
+          "thought": "基于执行结果生成最终答案",
+          "action": "finalize_answer",
+          "observation": "订单数为 999",
+          "tool_input": {
+            "order_count": 128
+          },
+          "tool_output": {}
+        }
+      ],
+      "final_answer": "最近30天订单数为 999。",
+      "uses_retrieved_context_correctly": true,
+      "final_answer_consistency": false,
+      "notes": [
+        "final_answer 与执行结果不一致"
+      ]
+    },
+    "execution": {
+      "sql_executable": true,
+      "result_match": true,
+      "executed_result": {
+        "order_count": 128
+      },
+      "error": null
+    },
+    "judgement": {
+      "primary_failure_stage": "generation",
+      "primary_failure_type": "final_answer_inconsistency",
+      "secondary_failure_types": []
+    }
   }
 ]
